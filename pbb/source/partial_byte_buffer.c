@@ -86,6 +86,13 @@ int8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
     return result;
 }
 
+int8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
+    if (pbb == NULL) return NULL;
+
+    *out_size = pbb_get_length(pbb);
+    return pbb->buffer;
+}
+
 void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len) {
     if (*value_bit_len <= 0) return;
 
