@@ -10,11 +10,16 @@
 
 #define BITSIZEOF_INT (sizeof(int) * 8)
 
+void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len);
+static unsigned int highest_one_bit(unsigned int value);
+static size_t next_capacity(size_t n);
+static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len);
+
 PartialByteBuffer* pbb_create(size_t initial_capacity) {
     PartialByteBuffer* pbb = (PartialByteBuffer*)malloc(sizeof(PartialByteBuffer));
     if (pbb != NULL) {
         size_t capacity = 1U << highest_one_bit(initial_capacity);
-        if (capacity == initial_capacity) {
+        if (capacity <= initial_capacity) {
             capacity = next_capacity(capacity);
         }
         pbb->buffer = (int8_t*)calloc(capacity, sizeof(int8_t));

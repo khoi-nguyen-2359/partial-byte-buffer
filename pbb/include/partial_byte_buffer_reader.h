@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 typedef struct PartialByteBufferReader {
-    const int8_t* buffer;
+    int8_t* buffer;
     size_t length;
     size_t byte_pos;
     uint8_t bit_pos;
