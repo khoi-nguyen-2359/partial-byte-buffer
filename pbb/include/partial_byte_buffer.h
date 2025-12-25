@@ -5,18 +5,18 @@
 #include <stddef.h>
 
 typedef struct PartialByteBuffer {
-    uint8_t* buffer;
-    uint32_t capacity;
-    uint32_t byte_pos;
+    int8_t* buffer;
+    size_t capacity;
+    size_t byte_pos;
     uint8_t bit_pos;
 } PartialByteBuffer;
 
-PartialByteBuffer* pbb_create(uint32_t initial_capacity);
+PartialByteBuffer* pbb_create(size_t initial_capacity);  // Change parameter
 void pbb_destroy(PartialByteBuffer* pbb);
 
 void pbb_put_byte(PartialByteBuffer* pbb, int8_t byte, uint8_t bit_len);
 void pbb_put_int(PartialByteBuffer* pbb, int value, uint8_t bit_len);
-void pbb_put_long(PartialByteBuffer* pbb, int64_t value, int bit_len);
+void pbb_put_long(PartialByteBuffer* pbb, long value, uint8_t bit_len);
 
 int8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size);
 
