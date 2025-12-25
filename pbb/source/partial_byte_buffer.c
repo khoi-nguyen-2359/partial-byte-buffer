@@ -33,6 +33,11 @@ void pbb_destroy(PartialByteBuffer* pbb) {
     }
 }
 
+size_t pbb_get_length(const PartialByteBuffer* pbb) {
+    if (pbb == NULL) return 0;
+    return pbb->byte_pos + ((pbb->bit_pos + 7) >> 3);
+}
+
 void pbb_put_byte(PartialByteBuffer* pbb, int8_t byte, uint8_t bit_len) {
     if (pbb == NULL || bit_len <= 0 || bit_len > 8) return;
 
@@ -70,11 +75,13 @@ void pbb_put_long(PartialByteBuffer* pbb, long value, uint8_t bit_len) {
 int8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
     if (pbb == NULL) return NULL;
 
-    size_t byte_count = (pbb->bit_pos + 7) / 8;
+    size_t byte_count = pbb_get_length(pbb);
     int8_t* result = (int8_t*)malloc(byte_count);
     if (result != NULL) {
         memcpy(result, pbb->buffer, byte_count);
-        if (out_size != NULL) *out_size = byte_count;
+        if (out_size != NULL) {
+            *out_size = byte_count;
+        }
     }
     return result;
 }
