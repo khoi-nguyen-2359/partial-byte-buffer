@@ -11,11 +11,13 @@
 #define BITSIZEOF_INT (sizeof(int) * 8)
 
 void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len);
-static unsigned int highest_one_bit(unsigned int value);
+static unsigned int highest_one_bit(int value);
 static size_t next_capacity(size_t n);
 static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len);
 
-PartialByteBuffer* pbb_create(size_t initial_capacity) {
+PartialByteBuffer* pbb_create(int initial_capacity) {
+    if (initial_capacity <= 0) return NULL;
+    
     PartialByteBuffer* pbb = (PartialByteBuffer*)malloc(sizeof(PartialByteBuffer));
     if (pbb != NULL) {
         size_t capacity = 1U << highest_one_bit(initial_capacity);
@@ -25,6 +27,7 @@ PartialByteBuffer* pbb_create(size_t initial_capacity) {
         pbb->buffer = (int8_t*)calloc(capacity, sizeof(int8_t));
         pbb->capacity = capacity;
         pbb->bit_pos = 0;
+        pbb->byte_pos = 0;
     }
     return pbb;
 }
@@ -33,8 +36,6 @@ void pbb_destroy(PartialByteBuffer* pbb) {
     if (pbb != NULL) {
         free(pbb->buffer);
         free(pbb);
-        pbb->buffer = NULL;
-        pbb = NULL;
     }
 }
 
@@ -108,10 +109,10 @@ void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint
     *value_bit_len -= put_bit_len;
 }
 
-static unsigned int highest_one_bit(unsigned int value) {
+static unsigned int highest_one_bit(int value) {
     if (value == 0) return 0;
 
-    int position = 0;
+    unsigned int position = 0;
     
     if (value >= 0x10000) { position += 16; value >>= 16; }
     if (value >= 0x100)   { position += 8;  value >>= 8; }

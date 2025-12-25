@@ -11,7 +11,7 @@ typedef struct PartialByteBuffer {
     uint8_t bit_pos;
 } PartialByteBuffer;
 
-PartialByteBuffer* pbb_create(size_t initial_capacity);  // Change parameter
+PartialByteBuffer* pbb_create(int initial_capacity);  // Change parameter
 void pbb_destroy(PartialByteBuffer* pbb);
 size_t pbb_get_length(const PartialByteBuffer* pbb);
 
