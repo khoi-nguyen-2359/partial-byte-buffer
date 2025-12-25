@@ -7,7 +7,8 @@
 typedef struct PartialByteBufferReader {
     const int8_t* buffer;
     size_t length;
-    size_t cursor;
+    size_t byte_pos;
+    uint8_t bit_pos;
 } PartialByteBufferReader;
 
 PartialByteBufferReader* pbbr_create(const int8_t* buffer, size_t length);

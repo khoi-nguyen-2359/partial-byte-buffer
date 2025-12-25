@@ -8,7 +8,8 @@ PartialByteBufferReader* pbbr_create(const int8_t* buffer, size_t length) {
             memcpy(buffer_copy, buffer, length);
             pbbr->buffer = buffer_copy;
             pbbr->length = length;
-            pbbr->cursor = 0;
+            pbbr->byte_pos = 0;
+            pbbr->bit_pos = 0;
         } else {
             free(pbbr);
             pbbr = NULL;
