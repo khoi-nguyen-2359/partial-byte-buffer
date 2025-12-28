@@ -24,7 +24,7 @@ PartialByteBuffer* pbb_create(int initial_capacity) {
         if (capacity <= initial_capacity) {
             capacity = next_capacity(capacity);
         }
-        pbb->buffer = (int8_t*)calloc(capacity, sizeof(int8_t));
+        pbb->buffer = (uint8_t*)calloc(capacity, sizeof(uint8_t));
         pbb->capacity = capacity;
         pbb->bit_pos = 0;
         pbb->byte_pos = 0;
@@ -50,7 +50,7 @@ void pbb_put_byte(PartialByteBuffer* pbb, int8_t byte, uint8_t bit_len) {
     ensure_capacity(pbb, bit_len);
 
     uint8_t remaining_bit_len = bit_len;
-    put_byte(pbb, byte, &remaining_bit_len, MIN(bit_len, 8 - pbb->bit_pos));
+    put_byte(pbb, byte, &remaining_bit_len, 8 - pbb->bit_pos);
     put_byte(pbb, byte, &remaining_bit_len, 8);
 }
 
@@ -78,11 +78,11 @@ void pbb_put_long(PartialByteBuffer* pbb, long value, uint8_t bit_len) {
     }
 }
 
-int8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
+uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
     if (pbb == NULL) return NULL;
 
     size_t byte_count = pbb_get_length(pbb);
-    int8_t* result = (int8_t*)malloc(byte_count);
+    uint8_t* result = (uint8_t*)malloc(byte_count);
     if (result != NULL) {
         memcpy(result, pbb->buffer, byte_count);
         if (out_size != NULL) {
@@ -92,16 +92,17 @@ int8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
     return result;
 }
 
-int8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
+uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
     if (pbb == NULL) return NULL;
 
     *out_size = pbb_get_length(pbb);
     return pbb->buffer;
 }
 
-void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len) {
+void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t available_bit_len) {
     if (*value_bit_len <= 0) return;
 
+    uint8_t put_bit_len = MIN(available_bit_len, *value_bit_len);
     pbb->buffer[pbb->byte_pos] |= (uint8_t)(value << (8 - *value_bit_len)) >> (8 - put_bit_len) << (8 - pbb->bit_pos - put_bit_len);
     uint8_t next_bit_pos = pbb->bit_pos + put_bit_len;
     pbb->byte_pos += next_bit_pos >> 3;
@@ -132,13 +133,13 @@ static size_t next_capacity(size_t n) {
 }
 
 static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len) {
-    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len - 1) >> 3);
+    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len) >> 3);
     if (required_bytes <= pbb->capacity)
         return;
 
     size_t capacity = next_capacity(pbb->capacity);
-    int8_t* new_buffer = (int8_t*)realloc(pbb->buffer, capacity);
-    if (new_buffer != NULL) {
+    uint8_t* new_buffer = (uint8_t*)realloc(pbb->buffer, capacity);
+    if (new_buffer != NULL) {   
         memset(new_buffer + pbb->capacity, 0, capacity - pbb->capacity);
         pbb->buffer = new_buffer;
         pbb->capacity = capacity;

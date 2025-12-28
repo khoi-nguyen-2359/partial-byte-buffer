@@ -66,7 +66,23 @@ TEST_F(PartialByteBufferTest, PutByte_MultipleBytes_CorrectValues) {
     pbb_destroy(pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_ExceedCapacity_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
+    pbb = pbb_create(2);
+    ASSERT_NE(pbb, nullptr);
+    pbb_put_byte(pbb, 0x11, 8);
+    pbb_put_byte(pbb, 0x22, 8);
+    pbb_put_byte(pbb, 0x33, 8);  // This should exceed capacity
+    ASSERT_EQ(pbb->buffer[0], 0x11);
+    ASSERT_EQ(pbb->buffer[1], 0x22);
+    ASSERT_EQ(pbb->buffer[2], 0x33);
+    ASSERT_EQ(pbb->byte_pos, 3);
+    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->capacity, 4);
+
+    pbb_destroy(pbb);
+}
+
+TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityTwice_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_put_byte(pbb, 0x11, 8);
@@ -96,13 +112,30 @@ TEST_F(PartialByteBufferTest, PutByte_NullBuffer_DoNothing) {
     ASSERT_EQ(pbb_ptr, nullptr);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialByte_3Bits_CorrectValue) {
+TEST_F(PartialByteBufferTest, PutByte_PartialByteOnce_CorrectValue) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_put_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 3);
+    pbb_destroy(pbb);
+}
+
+TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectValue) {
+    pbb = pbb_create(2);
+    ASSERT_NE(pbb, nullptr);
+    pbb_put_byte(pbb, 0b101, 3);
+    ASSERT_EQ(pbb->buffer[0], 0b10100000);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 3);
+
+    pbb_put_byte(pbb, 0b0100110, 7);
+    ASSERT_EQ(pbb->buffer[0], 0b10101001);
+    ASSERT_EQ(pbb->buffer[1], 0b10000000);
+    ASSERT_EQ(pbb->byte_pos, 1);
+    ASSERT_EQ(pbb->bit_pos, 2);
+
     pbb_destroy(pbb);
 }
 
