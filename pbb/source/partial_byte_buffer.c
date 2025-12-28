@@ -102,7 +102,7 @@ int8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
 void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len) {
     if (*value_bit_len <= 0) return;
 
-    pbb->buffer[pbb->byte_pos] |= (uint8_t)(value << (8 - *value_bit_len)) >> (8 - put_bit_len);
+    pbb->buffer[pbb->byte_pos] |= (uint8_t)(value << (8 - *value_bit_len)) >> (8 - put_bit_len) << (8 - pbb->bit_pos - put_bit_len);
     uint8_t next_bit_pos = pbb->bit_pos + put_bit_len;
     pbb->byte_pos += next_bit_pos >> 3;
     pbb->bit_pos = next_bit_pos & 7;
