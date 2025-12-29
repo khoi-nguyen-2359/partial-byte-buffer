@@ -112,7 +112,7 @@ TEST_F(PartialByteBufferTest, PutByte_NullBuffer_DoNothing) {
     ASSERT_EQ(pbb_ptr, nullptr);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialByteOnce_CorrectValue) {
+TEST_F(PartialByteBufferTest, PutByte_PartialByteOnce__CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_put_byte(pbb, 0b101, 3);
@@ -122,7 +122,7 @@ TEST_F(PartialByteBufferTest, PutByte_PartialByteOnce_CorrectValue) {
     pbb_destroy(pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectValue) {
+TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_put_byte(pbb, 0b101, 3);
@@ -139,82 +139,38 @@ TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectValue) {
     pbb_destroy(pbb);
 }
 
-// TEST_F(PartialByteBufferTest, PutByte_PartialByte_4Bits_CorrectValue) {
-//     pbb = pbb_create(2);
-//     ASSERT_NE(pbb, nullptr);
-//     // Put 4 bits with value 0b1010 (10)
-//     pbb_put_byte(pbb, 0b1010, 4);
-//     ASSERT_EQ(pbb->buffer[0] & 0b11110000, 0b10100000);
-//     ASSERT_EQ(pbb->byte_pos, 0);
-//     ASSERT_EQ(pbb->bit_pos, 4);
-//     pbb_destroy(pbb);
-// }
+TEST_F(PartialByteBufferTest, PutByte_PartialThenFullByte_CorrectBufferValues) {
+    pbb = pbb_create(2);
+    ASSERT_NE(pbb, nullptr);
+    pbb_put_byte(pbb, 0b101, 3);
+    ASSERT_EQ(pbb->buffer[0], 0b10100000);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 3);
 
-// TEST_F(PartialByteBufferTest, PutByte_TwoPartialBytes_SameByte_CorrectValue) {
-//     pbb = pbb_create(2);
-//     ASSERT_NE(pbb, nullptr);
-//     // Put 3 bits: 0b101
-//     pbb_put_byte(pbb, 0b101, 3);
-//     // Put 5 bits: 0b11001
-//     pbb_put_byte(pbb, 0b11001, 5);
-//     // Combined: 0b10111001
-//     ASSERT_EQ(pbb->buffer[0], (int8_t)0b10111001);
-//     ASSERT_EQ(pbb->byte_pos, 1);
-//     ASSERT_EQ(pbb->bit_pos, 0);
-//     pbb_destroy(pbb);
-// }
+    pbb_put_byte(pbb, 0b11111, 5);
+    ASSERT_EQ(pbb->buffer[0], 0b10111111);
+    ASSERT_EQ(pbb->byte_pos, 1);
+    ASSERT_EQ(pbb->bit_pos, 0);
 
-// TEST_F(PartialByteBufferTest, PutByte_PartialBytes_SpanTwoBytes_CorrectValue) {
-//     pbb = pbb_create(2);
-//     ASSERT_NE(pbb, nullptr);
-//     // Put 5 bits: 0b10101
-//     pbb_put_byte(pbb, 0b10101, 5);
-//     // Put 6 bits: 0b110011
-//     pbb_put_byte(pbb, 0b110011, 6);
-//     // First byte: 0b10101110 (5 + 3 bits)
-//     // Second byte: 0b01100000 (remaining 3 bits)
-//     ASSERT_EQ(pbb->buffer[0], (int8_t)0b10101110);
-//     ASSERT_EQ(pbb->buffer[1] & 0b11100000, 0b01100000);
-//     ASSERT_EQ(pbb->byte_pos, 1);
-//     ASSERT_EQ(pbb->bit_pos, 3);
-//     pbb_destroy(pbb);
-// }
+    pbb_destroy(pbb);
+}
 
-// TEST_F(PartialByteBufferTest, PutByte_MultipleSingleBits_CorrectValue) {
-//     pbb = pbb_create(2);
-//     ASSERT_NE(pbb, nullptr);
-//     // Put individual bits: 1, 0, 1, 1, 0, 0, 1, 0
-//     pbb_put_byte(pbb, 1, 1);
-//     pbb_put_byte(pbb, 0, 1);
-//     pbb_put_byte(pbb, 1, 1);
-//     pbb_put_byte(pbb, 1, 1);
-//     pbb_put_byte(pbb, 0, 1);
-//     pbb_put_byte(pbb, 0, 1);
-//     pbb_put_byte(pbb, 1, 1);
-//     pbb_put_byte(pbb, 0, 1);
-//     // Result: 0b10110010
-//     ASSERT_EQ(pbb->buffer[0], (int8_t)0b10110010);
-//     ASSERT_EQ(pbb->byte_pos, 1);
-//     ASSERT_EQ(pbb->bit_pos, 0);
-//     pbb_destroy(pbb);
-// }
+TEST_F(PartialByteBufferTest, PutByte_MultipleSingleBits_CorrectBufferValues) {
+    pbb = pbb_create(2);
+    ASSERT_NE(pbb, nullptr);
+    pbb_put_byte(pbb, 1, 1);
+    pbb_put_byte(pbb, 0, 1);
+    pbb_put_byte(pbb, 1, 1);
+    pbb_put_byte(pbb, 1, 1);
+    // Result: 0b1011
+    ASSERT_EQ(pbb->buffer[0], 0b10110000);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 4);
+    pbb_destroy(pbb);
+}
 
-// TEST_F(PartialByteBufferTest, PutByte_PartialThenFullByte_CorrectValue) {
-//     pbb = pbb_create(2);
-//     ASSERT_NE(pbb, nullptr);
-//     // Put 4 bits: 0b1010
-//     pbb_put_byte(pbb, 0b1010, 4);
-//     // Put full 8 bits: 0b11110000
-//     pbb_put_byte(pbb, 0b11110000, 8);
-//     // First byte: 0b10101111 (4 + 4 bits)
-//     // Second byte: 0b00000000 (remaining 4 bits)
-//     ASSERT_EQ(pbb->buffer[0], (int8_t)0b10101111);
-//     ASSERT_EQ(pbb->buffer[1] & 0b11110000, 0b00000000);
-//     ASSERT_EQ(pbb->byte_pos, 1);
-//     ASSERT_EQ(pbb->bit_pos, 4);
-//     pbb_destroy(pbb);
-// }
+#pragma endregion
 
-
+#pragma region PUT INT TESTS
 
 #pragma endregion
