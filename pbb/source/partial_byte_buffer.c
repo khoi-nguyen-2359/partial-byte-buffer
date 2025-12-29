@@ -2,15 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #define MIN_INIT_LEN 2
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(val, min, max) ( (val) < (min) ? (min) : ( (val) > (max) ? (max) : (val) ) )
 
+#define BITSIZEOF_UINT (sizeof(unsigned int) * 8)
 #define BITSIZEOF_INT (sizeof(int) * 8)
+#define BITSIZEOF_LONG (sizeof(long) * 8)
 
-void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t put_bit_len);
+static void put_byte(PartialByteBuffer* pbb, unsigned int value, uint8_t* value_bit_len, uint8_t put_bit_len);
 static unsigned int highest_one_bit(int value);
 static size_t next_capacity(size_t n);
 static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len);
@@ -21,7 +24,7 @@ PartialByteBuffer* pbb_create(int initial_capacity) {
     PartialByteBuffer* pbb = (PartialByteBuffer*)malloc(sizeof(PartialByteBuffer));
     if (pbb != NULL) {
         size_t capacity = 1U << highest_one_bit(initial_capacity);
-        if (capacity <= initial_capacity) {
+        if (capacity < initial_capacity) {
             capacity = next_capacity(capacity);
         }
         pbb->buffer = (uint8_t*)calloc(capacity, sizeof(uint8_t));
@@ -32,10 +35,11 @@ PartialByteBuffer* pbb_create(int initial_capacity) {
     return pbb;
 }
 
-void pbb_destroy(PartialByteBuffer* pbb) {
+void pbb_destroy(PartialByteBuffer** pbb) {
     if (pbb != NULL) {
-        free(pbb->buffer);
-        free(pbb);
+        free((*pbb)->buffer);
+        free(*pbb);
+        *pbb = NULL;
     }
 }
 
@@ -60,20 +64,8 @@ void pbb_put_int(PartialByteBuffer* pbb, int value, uint8_t bit_len) {
     ensure_capacity(pbb, bit_len);
     
     uint8_t remaining_bit_len = bit_len;
-    put_byte(pbb, value, &remaining_bit_len, MIN(bit_len, 8 - pbb->bit_pos));
+    put_byte(pbb, value, &remaining_bit_len, 8 - pbb->bit_pos);
     for (int i = 0; i < 3; ++i) {
-        put_byte(pbb, value, &remaining_bit_len, 8);
-    }
-}
-
-void pbb_put_long(PartialByteBuffer* pbb, long value, uint8_t bit_len) {
-    if (pbb == NULL || bit_len < 0 || bit_len > 64) return;
-
-    ensure_capacity(pbb, bit_len);
-
-    uint8_t remaining_bit_len = bit_len;
-    put_byte(pbb, value, &remaining_bit_len, MIN(bit_len, 8 - pbb->bit_pos));
-    for (int i = 0; i < 7; ++i) {
         put_byte(pbb, value, &remaining_bit_len, 8);
     }
 }
@@ -99,11 +91,12 @@ uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
     return pbb->buffer;
 }
 
-void put_byte(PartialByteBuffer* pbb, int8_t value, uint8_t* value_bit_len, uint8_t available_bit_len) {
+static void put_byte(PartialByteBuffer* pbb, unsigned int value, uint8_t* value_bit_len, uint8_t available_bit_len) {
     if (*value_bit_len <= 0) return;
 
+    // printf("Putting bits: value=0x%X, value_bit_len=%d, available_bit_len=%d\n", value, *value_bit_len, available_bit_len);
     uint8_t put_bit_len = MIN(available_bit_len, *value_bit_len);
-    pbb->buffer[pbb->byte_pos] |= (uint8_t)(value << (8 - *value_bit_len)) >> (8 - put_bit_len) << (8 - pbb->bit_pos - put_bit_len);
+    pbb->buffer[pbb->byte_pos] |= value << (BITSIZEOF_UINT - *value_bit_len) >> (BITSIZEOF_UINT - put_bit_len) << (8 - pbb->bit_pos - put_bit_len);
     uint8_t next_bit_pos = pbb->bit_pos + put_bit_len;
     pbb->byte_pos += next_bit_pos >> 3;
     pbb->bit_pos = next_bit_pos & 7;
@@ -134,6 +127,7 @@ static size_t next_capacity(size_t n) {
 
 static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len) {
     size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len) >> 3);
+    // printf("Ensuring capacity: required_bytes=%zu, current_capacity=%zu\n", required_bytes, pbb->capacity);
     if (required_bytes <= pbb->capacity)
         return;
 
