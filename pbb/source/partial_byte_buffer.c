@@ -71,15 +71,17 @@ void pbb_put_int(PartialByteBuffer* pbb, int value, uint8_t bit_len) {
 }
 
 uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
-    if (pbb == NULL) return NULL;
-
     size_t byte_count = pbb_get_length(pbb);
+    if (out_size != NULL) {
+        *out_size = byte_count;
+    }
+
+    if (pbb == NULL) return NULL;
+    if (byte_count == 0) return NULL;
+
     uint8_t* result = (uint8_t*)malloc(byte_count);
     if (result != NULL) {
         memcpy(result, pbb->buffer, byte_count);
-        if (out_size != NULL) {
-            *out_size = byte_count;
-        }
     }
     return result;
 }
@@ -87,7 +89,9 @@ uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
 uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
     if (pbb == NULL) return NULL;
 
-    *out_size = pbb_get_length(pbb);
+    if (out_size != NULL) {
+        *out_size = pbb_get_length(pbb);
+    }
     return pbb->buffer;
 }
 

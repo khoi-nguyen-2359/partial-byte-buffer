@@ -366,7 +366,7 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedExceedingCapacity_CorrectLe
 TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_CorrectLength) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0x101, 3);
+    pbb_put_byte(pbb, 0b101, 3);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 1);
 
@@ -383,5 +383,75 @@ TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytesExceedingCapacity_Cor
 
     pbb_destroy(&pbb);
 }
+
+#pragma endregion
+
+#pragma region TO BUFFER ARRAY TESTS
+
+TEST_F(PartialByteBufferTest, ToBufferArray_NullPbb_NullReturned) {
+    pbb = nullptr;
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
+    ASSERT_EQ(buffer_array, nullptr);
+    ASSERT_EQ(out_size, 0);
+}
+
+TEST_F(PartialByteBufferTest, ToBufferArray_EmptyBuffer_NullReturned) {
+    pbb = pbb_create(4);
+    ASSERT_NE(pbb, nullptr);
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
+    ASSERT_EQ(buffer_array, nullptr);
+    ASSERT_EQ(out_size, 0);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, ToBufferArray_NonEmptyBuffer_CorrectContentAndSize) {
+    pbb = pbb_create(8);
+    ASSERT_NE(pbb, nullptr);
+
+    pbb_put_byte(pbb, 0x12, 8);
+    pbb_put_int(pbb, 0x3456789A, 32);
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
+    ASSERT_NE(buffer_array, nullptr);
+    ASSERT_EQ(out_size, 5);
+    ASSERT_EQ(buffer_array[0], 0x12);
+    ASSERT_EQ(buffer_array[1], 0x34);
+    ASSERT_EQ(buffer_array[2], 0x56);
+    ASSERT_EQ(buffer_array[3], 0x78);
+    ASSERT_EQ(buffer_array[4], 0x9A);
+
+    free(buffer_array);
+    pbb_destroy(&pbb);
+}
+
+
+TEST_F(PartialByteBufferTest, ToBufferArray_BufferHasExtended_CorrectContentAndSize) {
+    pbb = pbb_create(2);
+    ASSERT_NE(pbb, nullptr);
+
+    pbb_put_byte(pbb, 0x12, 8);
+    pbb_put_int(pbb, 0x3456789A, 32);
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
+    ASSERT_NE(buffer_array, nullptr);
+    ASSERT_EQ(out_size, 5);
+    ASSERT_EQ(buffer_array[0], 0x12);
+    ASSERT_EQ(buffer_array[1], 0x34);
+    ASSERT_EQ(buffer_array[2], 0x56);
+    ASSERT_EQ(buffer_array[3], 0x78);
+    ASSERT_EQ(buffer_array[4], 0x9A);
+
+    free(buffer_array);
+    pbb_destroy(&pbb);
+}
+
+
 
 #pragma endregion
