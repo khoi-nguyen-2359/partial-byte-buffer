@@ -9,9 +9,13 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(val, min, max) ( (val) < (min) ? (min) : ( (val) > (max) ? (max) : (val) ) )
 
-#define BITSIZEOF_UINT (sizeof(unsigned int) * 8)
-#define BITSIZEOF_INT (sizeof(int) * 8)
-#define BITSIZEOF_LONG (sizeof(long) * 8)
+// #define BITSIZEOF_UINT (sizeof(unsigned int) * 8)
+// #define BITSIZEOF_INT (sizeof(int) * 8)
+// #define BITSIZEOF_LONG (sizeof(long) * 8)
+
+static const uint8_t BITSIZEOF_UINT = sizeof(unsigned int) << 3;
+static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
+static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
 
 static void put_byte(PartialByteBuffer* pbb, unsigned int value, uint8_t* value_bit_len, uint8_t put_bit_len);
 static unsigned int highest_one_bit(int value);
@@ -126,7 +130,7 @@ static size_t next_capacity(size_t n) {
 }
 
 static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len) {
-    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len) >> 3);
+    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len + 7) >> 3);
     // printf("Ensuring capacity: required_bytes=%zu, current_capacity=%zu\n", required_bytes, pbb->capacity);
     if (required_bytes <= pbb->capacity)
         return;
