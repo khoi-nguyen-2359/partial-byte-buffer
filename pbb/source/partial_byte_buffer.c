@@ -9,10 +9,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(val, min, max) ( (val) < (min) ? (min) : ( (val) > (max) ? (max) : (val) ) )
 
-// #define BITSIZEOF_UINT (sizeof(unsigned int) * 8)
-// #define BITSIZEOF_INT (sizeof(int) * 8)
-// #define BITSIZEOF_LONG (sizeof(long) * 8)
-
 static const uint8_t BITSIZEOF_UINT = sizeof(unsigned int) << 3;
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
@@ -135,7 +131,10 @@ static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len) {
     if (required_bytes <= pbb->capacity)
         return;
 
-    size_t capacity = next_capacity(pbb->capacity);
+    size_t capacity = 1U << highest_one_bit(required_bytes);
+    if (capacity < required_bytes) {
+        capacity = next_capacity(capacity);
+    }
     uint8_t* new_buffer = (uint8_t*)realloc(pbb->buffer, capacity);
     if (new_buffer != NULL) {   
         memset(new_buffer + pbb->capacity, 0, capacity - pbb->capacity);
