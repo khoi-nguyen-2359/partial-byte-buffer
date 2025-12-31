@@ -520,3 +520,89 @@ TEST_F(PartialByteBufferTest, GetBufferArray_NullOutSize_DoesNotCrash) {
 }
 
 #pragma endregion
+
+#pragma region EDGE CASE TESTS
+
+TEST_F(PartialByteBufferTest, PutByte_InvalidBitLength_DoesNothing) {
+    pbb = pbb_create(2);
+
+    pbb_put_byte(pbb, 0xAB, 0);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->capacity, 2);
+
+    pbb_put_byte(pbb, 0xAB, 9);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->capacity, 2);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, PutInt_InvalidBitLength_DoesNothing) {
+    pbb = pbb_create(2);
+    
+    pbb_put_int(pbb, 0x12345678, 0);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->capacity, 2);
+
+    pbb_put_int(pbb, 0x12345678, 33);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->byte_pos, 0);
+    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->capacity, 2);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, PutByte_ManyTimesWithInvalidBitLength_BufferIndicesCorrect) {
+    pbb = pbb_create(2);
+
+    const int total_bytes = 1000;
+    const int random_seed = 42;
+    srand(random_seed);
+    const int rand_bits[] = {-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8};
+
+    int bit_count = 0;
+    int capacity = 2;
+    for (int i = 0; i < total_bytes; ++i) {
+        int rand_bit_len = rand_bits[rand() % (sizeof(rand_bits)/sizeof(rand_bits[0]))];
+        pbb_put_byte(pbb, 0xAB, rand_bit_len);
+        bit_count += rand_bit_len > 0 ? rand_bit_len : 0;
+        if (bit_count > capacity * 8) {
+            capacity *= 2;
+        }
+    }
+
+    ASSERT_EQ(pbb->byte_pos, bit_count >> 3);
+    ASSERT_EQ(pbb->bit_pos, bit_count & 7);
+    ASSERT_GE(pbb->capacity, capacity);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, PutByte_ManyTimesFullByte_BufferContentAndIndicesCorrect) {
+    pbb = pbb_create(2);
+
+    const int total_bytes = 1000;
+    for (int i = 0; i < total_bytes; ++i) {
+        pbb_put_byte(pbb, 0xAB, 8);
+    }
+
+    int bit_count = total_bytes * 8;
+    ASSERT_EQ(pbb->byte_pos, bit_count >> 3);
+    ASSERT_EQ(pbb->bit_pos, bit_count & 7);
+    ASSERT_GE(pbb->capacity, 1024);
+
+    for (int i = 0; i < total_bytes; ++i) {
+        ASSERT_EQ(pbb->buffer[i], 0xAB);
+    }
+
+    pbb_destroy(&pbb);
+}
+
+#pragma endregion
