@@ -363,7 +363,7 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedExceedingCapacity_CorrectLe
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_CorrectLength) {
+TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_RoundUpCorrectly) {
     pbb = pbb_create(2);
 
     pbb_put_byte(pbb, 0b101, 3);
@@ -373,7 +373,7 @@ TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_CorrectLength) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytesExceedingCapacity_CorrectLength) {
+TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytesExceedingCapacity_RoundUpCorrectly) {
     pbb = pbb_create(2);
 
     pbb_put_int(pbb, 0b10100011010011001, 17);
@@ -430,7 +430,6 @@ TEST_F(PartialByteBufferTest, ToBufferArray_NonEmptyBuffer_CorrectContentAndSize
     pbb_destroy(&pbb);
 }
 
-
 TEST_F(PartialByteBufferTest, ToBufferArray_BufferHasExtended_CorrectContentAndSize) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
@@ -452,6 +451,72 @@ TEST_F(PartialByteBufferTest, ToBufferArray_BufferHasExtended_CorrectContentAndS
     pbb_destroy(&pbb);
 }
 
+TEST_F(PartialByteBufferTest, ToByteArray_NullOutSize_DoesNotCrash) {
+    pbb = pbb_create(2);
 
+    pbb_put_byte(pbb, 0x12, 8);
+
+    uint8_t* buffer_array = pbb_to_byte_array(pbb, nullptr);
+    ASSERT_NE(buffer_array, nullptr);
+    ASSERT_EQ(buffer_array[0], 0x12);
+
+    free(buffer_array);
+    pbb_destroy(&pbb);
+}
+
+#pragma endregion
+
+#pragma region GET BUFFER ARRAY TESTS
+
+TEST_F(PartialByteBufferTest, GetBufferArray_NullPbb_NullReturned) {
+    pbb = nullptr;
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_get_buffer_array(pbb, &out_size);
+    ASSERT_EQ(buffer_array, nullptr);
+    ASSERT_EQ(out_size, 0);
+}
+
+TEST_F(PartialByteBufferTest, GetBufferArray_EmptyBuffer_CorrectSize) {
+    pbb = pbb_create(4);
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_get_buffer_array(pbb, &out_size);
+    ASSERT_EQ(buffer_array, pbb->buffer);
+    ASSERT_EQ(out_size, 0);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, GetBufferArray_NonEmptyBuffer_CorrectContentAndSize) {
+    pbb = pbb_create(8);
+
+    pbb_put_byte(pbb, 0x12, 8);
+    pbb_put_int(pbb, 0x3456789A, 32);
+
+    size_t out_size = -1;
+    uint8_t* buffer_array = pbb_get_buffer_array(pbb, &out_size);
+    ASSERT_EQ(buffer_array, pbb->buffer);
+    ASSERT_EQ(out_size, 5);
+    ASSERT_EQ(buffer_array[0], 0x12);
+    ASSERT_EQ(buffer_array[1], 0x34);
+    ASSERT_EQ(buffer_array[2], 0x56);
+    ASSERT_EQ(buffer_array[3], 0x78);
+    ASSERT_EQ(buffer_array[4], 0x9A);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferTest, GetBufferArray_NullOutSize_DoesNotCrash) {
+    pbb = pbb_create(2);
+
+    pbb_put_byte(pbb, 0x12, 8);
+
+    uint8_t* buffer_array = pbb_get_buffer_array(pbb, nullptr);
+    ASSERT_EQ(buffer_array, pbb->buffer);
+    ASSERT_EQ(buffer_array[0], 0x12);
+
+    pbb_destroy(&pbb);
+}
 
 #pragma endregion

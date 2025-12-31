@@ -87,11 +87,10 @@ uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
 }
 
 uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
-    if (pbb == NULL) return NULL;
-
     if (out_size != NULL) {
         *out_size = pbb_get_length(pbb);
     }
+    if (pbb == NULL) return NULL;
     return pbb->buffer;
 }
 
