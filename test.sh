@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+TEST_FILES=${1:-"pbb/test/*.cpp"}
+
 if [[ ! -d build ]]; then
     mkdir build
 fi
@@ -13,10 +15,11 @@ if [[ "$ASAN_OPTIONS" == *"detect_leaks=1"* ]]; then
 fi
 
 echo "Compiling tests with: $CXX, Sanitizer Flags: $SANITIZER_FLAGS"
+echo "Test files: $TEST_FILES"
 
 $CXX -std=c++17 -g \
     pbb/source/*.c \
-    pbb/test/*.cpp \
+    $TEST_FILES \
     -Ipbb/include \
     -lfmt -lgtest -lgtest_main -lpthread \
     $SANITIZER_FLAGS \
