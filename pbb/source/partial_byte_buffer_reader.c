@@ -9,6 +9,7 @@ static const uint8_t BITSIZEOF_UINT = sizeof(unsigned int) << 3;
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 
 static uint8_t read_byte(PartialByteBufferReader* pbbr, uint8_t* read_bit_len, uint8_t available_bit_len);
+static size_t required_length(const PartialByteBufferReader* pbbr, uint8_t bit_len);
 
 PartialByteBufferReader* pbbr_create(const uint8_t* buffer, size_t length) {
     if (buffer == NULL || length == 0) return NULL;
@@ -40,9 +41,9 @@ void pbbr_destroy(PartialByteBufferReader** pbbr) {
 
 int8_t pbbr_read_byte(PartialByteBufferReader* pbbr, uint8_t bit_len) {
     if (pbbr == NULL || bit_len <= 0 || bit_len > 8) return 0;
-    if ((pbbr->byte_pos + (pbbr->bit_pos + bit_len)) >> 3 >= pbbr->length) return 0;
+    if (required_length(pbbr, bit_len) > pbbr->length) return 0;
 
-    unsigned int result = 0;
+    uint8_t result = 0;
     uint8_t remaining_bit_len = bit_len;
     
     result |= read_byte(pbbr, &remaining_bit_len, 8 - pbbr->bit_pos);
@@ -53,9 +54,9 @@ int8_t pbbr_read_byte(PartialByteBufferReader* pbbr, uint8_t bit_len) {
 
 int pbbr_read_int(PartialByteBufferReader* pbbr, uint8_t bit_len) {
     if (pbbr == NULL || bit_len <= 0 || bit_len > BITSIZEOF_INT) return 0;
-    if (pbbr->byte_pos >= pbbr->length) return 0;
+    if (required_length(pbbr, bit_len) > pbbr->length) return 0;
 
-    unsigned int result = 0;
+    uint8_t result = 0;
     uint8_t remaining_bit_len = bit_len;
     
     result |= read_byte(pbbr, &remaining_bit_len, 8 - pbbr->bit_pos);
@@ -87,4 +88,8 @@ static uint8_t read_byte(PartialByteBufferReader* pbbr, uint8_t* read_bit_len, u
     *read_bit_len -= bits_to_read;
     
     return result;
+}
+
+static size_t required_length(const PartialByteBufferReader* pbbr, uint8_t bit_len) {
+    return pbbr->byte_pos + ((pbbr->bit_pos + bit_len + 7) >> 3);
 }
