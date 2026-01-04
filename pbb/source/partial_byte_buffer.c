@@ -9,21 +9,39 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(val, min, max) ( (val) < (min) ? (min) : ( (val) > (max) ? (max) : (val) ) )
 
-static const uint8_t BITSIZEOF_UINT = sizeof(unsigned int) << 3;
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
 
-static void put_byte(PartialByteBuffer* pbb, unsigned int value, uint8_t* value_bit_len, uint8_t put_bit_len);
-static unsigned int highest_one_bit(int value);
+/**
+ * Extracted function to write bits of [data] into the current byte of a PartialByteBuffer.
+ * [data_bits] will be updated to reflect the remaining bits of the data to write.
+ */
+static void write_byte(PartialByteBuffer* pbb, uint32_t data, uint8_t* data_bits, uint8_t available_bits);
+
+/**
+ * Find an allocation size to cover [n] bytes of buffer.
+ */
 static size_t next_capacity(size_t n);
-static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len);
+
+/**
+ * Ensure that the PartialByteBuffer has enough capacity to write [bits] more bits.
+ * If not, the buffer is reallocated to a larger size.
+ */
+static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bits);
+
+/**
+ * Return the number with the highest one bit in an integer value on.
+ * Returns 0 if the value is 0.
+ * For example, highest_one_bit(18) returns 16.
+ */
+static unsigned int highest_one_bit(int value);
 
 PartialByteBuffer* pbb_create(int initial_capacity) {
     if (initial_capacity <= 0) return NULL;
     
     PartialByteBuffer* pbb = (PartialByteBuffer*)malloc(sizeof(PartialByteBuffer));
     if (pbb != NULL) {
-        size_t capacity = 1U << highest_one_bit(initial_capacity);
+        size_t capacity = highest_one_bit(initial_capacity);
         if (capacity < initial_capacity) {
             capacity = next_capacity(capacity);
         }
@@ -48,32 +66,31 @@ size_t pbb_get_length(const PartialByteBuffer* pbb) {
     return pbb->byte_pos + ((pbb->bit_pos + 7) >> 3);
 }
 
-void pbb_put_byte(PartialByteBuffer* pbb, int8_t byte, uint8_t bit_len) {
-    if (pbb == NULL || bit_len <= 0 || bit_len > 8) return;
+void pbb_write_byte(PartialByteBuffer* pbb, int8_t byte, uint8_t bits) {
+    if (pbb == NULL || bits <= 0 || bits > 8) return;
 
-    ensure_capacity(pbb, bit_len);
+    ensure_capacity(pbb, bits);
 
-    uint8_t remaining_bit_len = bit_len;
-    put_byte(pbb, byte, &remaining_bit_len, 8 - pbb->bit_pos);
-    put_byte(pbb, byte, &remaining_bit_len, 8);
+    uint8_t remaining_bits = bits;
+    write_byte(pbb, byte, &remaining_bits, 8 - pbb->bit_pos);
+    write_byte(pbb, byte, &remaining_bits, 8);
 }
 
-void pbb_put_int(PartialByteBuffer* pbb, int value, uint8_t bit_len) {
-    if (pbb == NULL || bit_len <= 0 || bit_len > BITSIZEOF_INT) return;
-
-    ensure_capacity(pbb, bit_len);
+void pbb_write_int(PartialByteBuffer* pbb, int value, uint8_t bits) {
+    if (pbb == NULL || bits <= 0 || bits > BITSIZEOF_INT) return;
+    ensure_capacity(pbb, bits);
     
-    uint8_t remaining_bit_len = bit_len;
-    put_byte(pbb, value, &remaining_bit_len, 8 - pbb->bit_pos);
+    uint8_t remaining_bits = bits;
+    write_byte(pbb, value, &remaining_bits, 8 - pbb->bit_pos);
     for (int i = 0; i < 3; ++i) {
-        put_byte(pbb, value, &remaining_bit_len, 8);
+        write_byte(pbb, value, &remaining_bits, 8);
     }
 }
 
-uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
+uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* len) {
     size_t byte_count = pbb_get_length(pbb);
-    if (out_size != NULL) {
-        *out_size = byte_count;
+    if (len != NULL) {
+        *len = byte_count;
     }
 
     if (pbb == NULL) return NULL;
@@ -86,24 +103,23 @@ uint8_t* pbb_to_byte_array(const PartialByteBuffer* pbb, size_t* out_size) {
     return result;
 }
 
-uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* out_size) {
-    if (out_size != NULL) {
-        *out_size = pbb_get_length(pbb);
+uint8_t* pbb_get_buffer_array(const PartialByteBuffer* pbb, size_t* len) {
+    if (len != NULL) {
+        *len = pbb_get_length(pbb);
     }
     if (pbb == NULL) return NULL;
     return pbb->buffer;
 }
 
-static void put_byte(PartialByteBuffer* pbb, unsigned int value, uint8_t* value_bit_len, uint8_t available_bit_len) {
-    if (*value_bit_len <= 0) return;
+static void write_byte(PartialByteBuffer* pbb, uint32_t data, uint8_t* data_bits, uint8_t available_bits) {
+    if (*data_bits <= 0) return;
 
-    // printf("Putting bits: value=0x%X, value_bit_len=%d, available_bit_len=%d\n", value, *value_bit_len, available_bit_len);
-    uint8_t put_bit_len = MIN(available_bit_len, *value_bit_len);
-    pbb->buffer[pbb->byte_pos] |= value << (BITSIZEOF_UINT - *value_bit_len) >> (BITSIZEOF_UINT - put_bit_len) << (8 - pbb->bit_pos - put_bit_len);
-    uint8_t next_bit_pos = pbb->bit_pos + put_bit_len;
+    uint8_t write_bits = MIN(available_bits, *data_bits);
+    pbb->buffer[pbb->byte_pos] |= data << (32 - *data_bits) >> (32 - write_bits) << (8 - pbb->bit_pos - write_bits);
+    uint8_t next_bit_pos = pbb->bit_pos + write_bits;
     pbb->byte_pos += next_bit_pos >> 3;
     pbb->bit_pos = next_bit_pos & 7;
-    *value_bit_len -= put_bit_len;
+    *data_bits -= write_bits;
 }
 
 static unsigned int highest_one_bit(int value) {
@@ -117,7 +133,7 @@ static unsigned int highest_one_bit(int value) {
     if (value >= 0x4)     { position += 2;  value >>= 2; }
     if (value >= 0x2)     { position += 1; }
 
-    return position;
+    return 1U << position;
 }
 
 static size_t next_capacity(size_t n) {
@@ -128,15 +144,14 @@ static size_t next_capacity(size_t n) {
     return next_power2;
 }
 
-static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bit_len) {
-    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bit_len + 7) >> 3);
-    // printf("Ensuring capacity: required_bytes=%zu, current_capacity=%zu\n", required_bytes, pbb->capacity);
+static void ensure_capacity(PartialByteBuffer* pbb, uint8_t bits) {
+    size_t required_bytes = pbb->byte_pos + ((pbb->bit_pos + bits + 7) >> 3);
     if (required_bytes <= pbb->capacity)
         return;
 
-    size_t capacity = 1U << highest_one_bit(required_bytes);
+    size_t capacity = next_capacity(pbb->capacity);
     if (capacity < required_bytes) {
-        capacity = next_capacity(capacity);
+        capacity = next_capacity(highest_one_bit(required_bytes));
     }
     uint8_t* new_buffer = (uint8_t*)realloc(pbb->buffer, capacity);
     if (new_buffer != NULL) {   

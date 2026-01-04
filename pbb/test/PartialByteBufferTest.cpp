@@ -42,23 +42,23 @@ TEST_F(PartialByteBufferTest, Destroy_NoCrash) {
 
 #pragma endregion
 
-#pragma region PUT BYTE TESTS
+#pragma region WRITE BYTE TESTS
 
-TEST_F(PartialByteBufferTest, PutByte_SingleByte_CorrectValue) {
+TEST_F(PartialByteBufferTest, WriteByte_SingleByte_CorrectValue) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0x42, 8);
+    pbb_write_byte(pbb, 0x42, 8);
     ASSERT_EQ(pbb->buffer[0], 0x42);
     ASSERT_EQ(pbb->byte_pos, 1);
     ASSERT_EQ(pbb->bit_pos, 0);
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_MultipleBytes_CorrectValues) {
+TEST_F(PartialByteBufferTest, WriteByte_MultipleBytes_CorrectValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_byte(pbb, 0x22, 8);
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_byte(pbb, 0x22, 8);
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->byte_pos, 2);
@@ -66,31 +66,31 @@ TEST_F(PartialByteBufferTest, PutByte_MultipleBytes_CorrectValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_NullBuffer_DoNothing) {
+TEST_F(PartialByteBufferTest, WriteByte_NullBuffer_DoNothing) {
     PartialByteBuffer* pbb_ptr = nullptr;
-    pbb_put_byte(pbb_ptr, 0x42, 8);
+    pbb_write_byte(pbb_ptr, 0x42, 8);
     ASSERT_EQ(pbb_ptr, nullptr);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialByteOnce_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteByte_PartialByteOnce_CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0b101, 3);
+    pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 3);
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteByte_PartialByteTwice_CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0b101, 3);
+    pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 3);
 
-    pbb_put_byte(pbb, 0b0100110, 7);
+    pbb_write_byte(pbb, 0b0100110, 7);
     ASSERT_EQ(pbb->buffer[0], 0b10101001);
     ASSERT_EQ(pbb->buffer[1], 0b10000000);
     ASSERT_EQ(pbb->byte_pos, 1);
@@ -99,15 +99,15 @@ TEST_F(PartialByteBufferTest, PutByte_PartialByteTwice_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_PartialThenFullByte_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteByte_PartialThenFullByte_CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0b101, 3);
+    pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 3);
 
-    pbb_put_byte(pbb, 0b11111, 5);
+    pbb_write_byte(pbb, 0b11111, 5);
     ASSERT_EQ(pbb->buffer[0], 0b10111111);
     ASSERT_EQ(pbb->byte_pos, 1);
     ASSERT_EQ(pbb->bit_pos, 0);
@@ -115,13 +115,13 @@ TEST_F(PartialByteBufferTest, PutByte_PartialThenFullByte_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_MultipleSingleBits_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteByte_MultipleSingleBits_CorrectBufferValues) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 1, 1);
-    pbb_put_byte(pbb, 0, 1);
-    pbb_put_byte(pbb, 1, 1);
-    pbb_put_byte(pbb, 1, 1);
+    pbb_write_byte(pbb, 1, 1);
+    pbb_write_byte(pbb, 0, 1);
+    pbb_write_byte(pbb, 1, 1);
+    pbb_write_byte(pbb, 1, 1);
     // Result: 0b1011
     ASSERT_EQ(pbb->buffer[0], 0b10110000);
     ASSERT_EQ(pbb->byte_pos, 0);
@@ -129,20 +129,20 @@ TEST_F(PartialByteBufferTest, PutByte_MultipleSingleBits_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_NegativePartialByte_CorrectValue) {
+TEST_F(PartialByteBufferTest, WriteByte_NegativePartialByte_CorrectValue) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, -3, 5);
+    pbb_write_byte(pbb, -3, 5);
     ASSERT_EQ(pbb->buffer[0], 0xE8);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 5);
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_NegativeFullByte_CorrectValue) {
+TEST_F(PartialByteBufferTest, WriteByte_NegativeFullByte_CorrectValue) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, -3, 8);
+    pbb_write_byte(pbb, -3, 8);
     ASSERT_EQ(pbb->buffer[0], 0xFD);
     ASSERT_EQ(pbb->byte_pos, 1);
     ASSERT_EQ(pbb->bit_pos, 0);
@@ -151,13 +151,13 @@ TEST_F(PartialByteBufferTest, PutByte_NegativeFullByte_CorrectValue) {
 
 #pragma endregion
 
-#pragma region PUT INT TESTS
+#pragma region WRITE INT TESTS
 
-TEST_F(PartialByteBufferTest, PutInt_FullInt_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteInt_FullInt_CorrectBufferValues) {
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0x11223344, 32);
+    pbb_write_int(pbb, 0x11223344, 32);
 
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
@@ -170,12 +170,12 @@ TEST_F(PartialByteBufferTest, PutInt_FullInt_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_MultipleInts_CorrectBufferValuesAndPositions) {
+TEST_F(PartialByteBufferTest, WriteInt_MultipleInts_CorrectBufferValuesAndPositions) {
     pbb = pbb_create(8);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0x11223344, 32);
-    pbb_put_int(pbb, 0x55667788, 32);
+    pbb_write_int(pbb, 0x11223344, 32);
+    pbb_write_int(pbb, 0x55667788, 32);
 
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
@@ -192,11 +192,11 @@ TEST_F(PartialByteBufferTest, PutInt_MultipleInts_CorrectBufferValuesAndPosition
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_PartialInt_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteInt_PartialInt_CorrectBufferValues) {
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0xABC, 12);
+    pbb_write_int(pbb, 0xABC, 12);
 
     ASSERT_EQ(pbb->buffer[0], 0xAB);
     ASSERT_EQ(pbb->buffer[1], 0xC0);
@@ -206,11 +206,11 @@ TEST_F(PartialByteBufferTest, PutInt_PartialInt_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_NegativePartialInt_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteInt_NegativePartialInt_CorrectBufferValues) {
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0xF6B, 12); // -149
+    pbb_write_int(pbb, 0xF6B, 12); // -149
 
     ASSERT_EQ(pbb->buffer[0], 0xF6);
     ASSERT_EQ(pbb->buffer[1], 0xB0);
@@ -220,11 +220,11 @@ TEST_F(PartialByteBufferTest, PutInt_NegativePartialInt_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_NegativeFullInt_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteInt_NegativeFullInt_CorrectBufferValues) {
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0xD1ECFE96, 32); // -772,997,482
+    pbb_write_int(pbb, 0xD1ECFE96, 32); // -772,997,482
 
     ASSERT_EQ(pbb->buffer[0], 0xD1);
     ASSERT_EQ(pbb->buffer[1], 0xEC);
@@ -236,22 +236,22 @@ TEST_F(PartialByteBufferTest, PutInt_NegativeFullInt_CorrectBufferValues) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_NullBuffer_DoNothing) {
+TEST_F(PartialByteBufferTest, WriteInt_NullBuffer_DoNothing) {
     PartialByteBuffer* pbb_ptr = nullptr;
-    pbb_put_int(pbb_ptr, 0x12345678, 32);
+    pbb_write_int(pbb_ptr, 0x12345678, 32);
     ASSERT_EQ(pbb_ptr, nullptr);
 }
 
 #pragma endregion
 
-#pragma region PUT COMBINATION TESTS
+#pragma region WRITE COMBINATION TESTS
 
-TEST_F(PartialByteBufferTest, PutByteThenInt_CorrectBufferValues) {
+TEST_F(PartialByteBufferTest, WriteByteThenInt_CorrectBufferValues) {
     pbb = pbb_create(6);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0xAA, 8);
-    pbb_put_int(pbb, 0x11223344, 32);
+    pbb_write_byte(pbb, 0xAA, 8);
+    pbb_write_int(pbb, 0x11223344, 32);
 
     ASSERT_EQ(pbb->buffer[0], 0xAA);
     ASSERT_EQ(pbb->buffer[1], 0x11);
@@ -269,8 +269,8 @@ TEST_F(PartialByteBufferTest, PutPartialByteThenPartialInt_CorrectBufferValues) 
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0b101, 3);      
-    pbb_put_int(pbb, 0b101010111100, 12);
+    pbb_write_byte(pbb, 0b101, 3);      
+    pbb_write_int(pbb, 0b101010111100, 12);
 
     ASSERT_EQ(pbb->buffer[0], 0b10110101);
     ASSERT_EQ(pbb->buffer[1], 0b01111000);
@@ -285,12 +285,12 @@ TEST_F(PartialByteBufferTest, PutPartialByteThenPartialInt_CorrectBufferValues) 
 
 #pragma region CAPACITY EXPANSION TESTS
 
-TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferTest, WriteByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_byte(pbb, 0x22, 8);
-    pbb_put_byte(pbb, 0x33, 8);  // This should exceed capacity
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_byte(pbb, 0x22, 8);
+    pbb_write_byte(pbb, 0x33, 8);  // This should exceed capacity
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->buffer[2], 0x33);
@@ -301,12 +301,12 @@ TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityTwice_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferTest, WriteByte_ExceedCapacityTwice_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_byte(pbb, 0x22, 8);
-    pbb_put_byte(pbb, 0x33, 8);  // This should exceed capacity
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_byte(pbb, 0x22, 8);
+    pbb_write_byte(pbb, 0x33, 8);  // This should exceed capacity
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->buffer[2], 0x33);
@@ -314,8 +314,8 @@ TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityTwice_BufferGrowsCorrectly) 
     ASSERT_EQ(pbb->bit_pos, 0);
     ASSERT_EQ(pbb->capacity, 4);
 
-    pbb_put_byte(pbb, 0x44, 8);
-    pbb_put_byte(pbb, 0x55, 8);  // This should exceed capacity again
+    pbb_write_byte(pbb, 0x44, 8);
+    pbb_write_byte(pbb, 0x55, 8);  // This should exceed capacity again
     ASSERT_EQ(pbb->buffer[3], 0x44);
     ASSERT_EQ(pbb->buffer[4], 0x55);
     ASSERT_EQ(pbb->byte_pos, 5);
@@ -326,11 +326,11 @@ TEST_F(PartialByteBufferTest, PutByte_ExceedCapacityTwice_BufferGrowsCorrectly) 
 }
 
 
-TEST_F(PartialByteBufferTest, PutInt_ExceedCapacityOnce_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferTest, WriteInt_ExceedCapacityOnce_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_int(pbb, 0x11223344, 32); // requires growth past initial 2 bytes
+    pbb_write_int(pbb, 0x11223344, 32); // requires growth past initial 2 bytes
 
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
@@ -347,8 +347,8 @@ TEST_F(PartialByteBufferTest, PutPartialByteThenPartialInt_ExceedCapacity_Correc
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0b10100, 5);      
-    pbb_put_int(pbb, 0b101010111101, 12);
+    pbb_write_byte(pbb, 0b10100, 5);      
+    pbb_write_int(pbb, 0b101010111101, 12);
 
     ASSERT_EQ(pbb->buffer[0], 0b10100101);
     ASSERT_EQ(pbb->buffer[1], 0b01011110);
@@ -361,12 +361,12 @@ TEST_F(PartialByteBufferTest, PutPartialByteThenPartialInt_ExceedCapacity_Correc
 }
 
 
-TEST_F(PartialByteBufferTest, PutByteThenInt_ExceedCapacityFourTimesAtOnce_CorrectBufferCapacity) {
+TEST_F(PartialByteBufferTest, WriteByteThenInt_ExceedCapacityTwiceAtOnce_CorrectBufferCapacity) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_int(pbb, 0x22334455, 32); // Exceeds initial capacity from 2 -> 8
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_int(pbb, 0x22334455, 32); // Exceeds initial capacity from 2 -> 8
     ASSERT_EQ(pbb->capacity, 8);
 
     pbb_destroy(&pbb);
@@ -390,8 +390,8 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedWithoutExceedingCapacity_Co
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_int(pbb, 0x22, 8);
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_int(pbb, 0x22, 8);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(pbb->capacity, 4);
     ASSERT_EQ(length, 2);
@@ -402,8 +402,8 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedWithoutExceedingCapacity_Co
 TEST_F(PartialByteBufferTest, GetLength_BufferChangedExceedingCapacity_CorrectLength) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0x11, 8);
-    pbb_put_int(pbb, 0x22334455, 32); // Exceeds initial capacity
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_int(pbb, 0x22334455, 32); // Exceeds initial capacity
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(pbb->capacity, 8);
     ASSERT_EQ(length, 5);
@@ -414,7 +414,7 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedExceedingCapacity_CorrectLe
 TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_RoundUpCorrectly) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0b101, 3);
+    pbb_write_byte(pbb, 0b101, 3);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 1);
 
@@ -424,7 +424,7 @@ TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytes_RoundUpCorrectly) {
 TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytesExceedingCapacity_RoundUpCorrectly) {
     pbb = pbb_create(2);
 
-    pbb_put_int(pbb, 0b10100011010011001, 17);
+    pbb_write_int(pbb, 0b10100011010011001, 17);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 3);
     ASSERT_EQ(pbb->capacity, 4);
@@ -461,8 +461,8 @@ TEST_F(PartialByteBufferTest, ToBufferArray_NonEmptyBuffer_CorrectContentAndSize
     pbb = pbb_create(8);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0x12, 8);
-    pbb_put_int(pbb, 0x3456789A, 32);
+    pbb_write_byte(pbb, 0x12, 8);
+    pbb_write_int(pbb, 0x3456789A, 32);
 
     size_t out_size = -1;
     uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
@@ -482,8 +482,8 @@ TEST_F(PartialByteBufferTest, ToBufferArray_BufferHasExtended_CorrectContentAndS
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_put_byte(pbb, 0x12, 8);
-    pbb_put_int(pbb, 0x3456789A, 32);
+    pbb_write_byte(pbb, 0x12, 8);
+    pbb_write_int(pbb, 0x3456789A, 32);
 
     size_t out_size = -1;
     uint8_t* buffer_array = pbb_to_byte_array(pbb, &out_size);
@@ -502,7 +502,7 @@ TEST_F(PartialByteBufferTest, ToBufferArray_BufferHasExtended_CorrectContentAndS
 TEST_F(PartialByteBufferTest, ToByteArray_NullOutSize_DoesNotCrash) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0x12, 8);
+    pbb_write_byte(pbb, 0x12, 8);
 
     uint8_t* buffer_array = pbb_to_byte_array(pbb, nullptr);
     ASSERT_NE(buffer_array, nullptr);
@@ -539,8 +539,8 @@ TEST_F(PartialByteBufferTest, GetBufferArray_EmptyBuffer_CorrectSize) {
 TEST_F(PartialByteBufferTest, GetBufferArray_NonEmptyBuffer_CorrectContentAndSize) {
     pbb = pbb_create(8);
 
-    pbb_put_byte(pbb, 0x12, 8);
-    pbb_put_int(pbb, 0x3456789A, 32);
+    pbb_write_byte(pbb, 0x12, 8);
+    pbb_write_int(pbb, 0x3456789A, 32);
 
     size_t out_size = -1;
     uint8_t* buffer_array = pbb_get_buffer_array(pbb, &out_size);
@@ -558,7 +558,7 @@ TEST_F(PartialByteBufferTest, GetBufferArray_NonEmptyBuffer_CorrectContentAndSiz
 TEST_F(PartialByteBufferTest, GetBufferArray_NullOutSize_DoesNotCrash) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0x12, 8);
+    pbb_write_byte(pbb, 0x12, 8);
 
     uint8_t* buffer_array = pbb_get_buffer_array(pbb, nullptr);
     ASSERT_EQ(buffer_array, pbb->buffer);
@@ -571,16 +571,16 @@ TEST_F(PartialByteBufferTest, GetBufferArray_NullOutSize_DoesNotCrash) {
 
 #pragma region EDGE CASE TESTS
 
-TEST_F(PartialByteBufferTest, PutByte_InvalidBitLength_DoesNothing) {
+TEST_F(PartialByteBufferTest, WriteByte_InvalidBitLength_DoesNothing) {
     pbb = pbb_create(2);
 
-    pbb_put_byte(pbb, 0xAB, 0);
+    pbb_write_byte(pbb, 0xAB, 0);
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 0);
     ASSERT_EQ(pbb->capacity, 2);
 
-    pbb_put_byte(pbb, 0xAB, 9);
+    pbb_write_byte(pbb, 0xAB, 9);
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 0);
@@ -589,16 +589,16 @@ TEST_F(PartialByteBufferTest, PutByte_InvalidBitLength_DoesNothing) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutInt_InvalidBitLength_DoesNothing) {
+TEST_F(PartialByteBufferTest, WriteInt_InvalidBitLength_DoesNothing) {
     pbb = pbb_create(2);
     
-    pbb_put_int(pbb, 0x12345678, 0);
+    pbb_write_int(pbb, 0x12345678, 0);
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 0);
     ASSERT_EQ(pbb->capacity, 2);
 
-    pbb_put_int(pbb, 0x12345678, 33);
+    pbb_write_int(pbb, 0x12345678, 33);
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 0);
@@ -607,7 +607,7 @@ TEST_F(PartialByteBufferTest, PutInt_InvalidBitLength_DoesNothing) {
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_ManyTimesWithInvalidBitLength_BufferIndicesCorrect) {
+TEST_F(PartialByteBufferTest, WriteByte_ManyTimesWithInvalidBitLength_BufferIndicesCorrect) {
     pbb = pbb_create(2);
 
     const int total_bytes = 1000;
@@ -619,7 +619,7 @@ TEST_F(PartialByteBufferTest, PutByte_ManyTimesWithInvalidBitLength_BufferIndice
     int capacity = 2;
     for (int i = 0; i < total_bytes; ++i) {
         int rand_bit_len = rand_bits[rand() % (sizeof(rand_bits)/sizeof(rand_bits[0]))];
-        pbb_put_byte(pbb, 0xAB, rand_bit_len);
+        pbb_write_byte(pbb, 0xAB, rand_bit_len);
         bit_count += rand_bit_len > 0 ? rand_bit_len : 0;
         if (bit_count > capacity * 8) {
             capacity *= 2;
@@ -633,12 +633,12 @@ TEST_F(PartialByteBufferTest, PutByte_ManyTimesWithInvalidBitLength_BufferIndice
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferTest, PutByte_ManyTimesFullByte_BufferContentAndIndicesCorrect) {
+TEST_F(PartialByteBufferTest, WriteByte_ManyTimesFullByte_BufferContentAndIndicesCorrect) {
     pbb = pbb_create(2);
 
     const int total_bytes = 1000;
     for (int i = 0; i < total_bytes; ++i) {
-        pbb_put_byte(pbb, 0xAB, 8);
+        pbb_write_byte(pbb, 0xAB, 8);
     }
 
     int bit_count = total_bytes * 8;
