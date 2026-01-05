@@ -6,7 +6,7 @@
 
 class PartialByteBufferTest : public ::testing::Test {
     protected:
-        PartialByteBuffer *pbb = nullptr;
+        partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
             pbb = nullptr;
         }
@@ -67,7 +67,7 @@ TEST_F(PartialByteBufferTest, WriteByte_MultipleBytes_CorrectValues) {
 }
 
 TEST_F(PartialByteBufferTest, WriteByte_NullBuffer_DoNothing) {
-    PartialByteBuffer* pbb_ptr = nullptr;
+    partial_byte_buffer* pbb_ptr = nullptr;
     pbb_write_byte(pbb_ptr, 0x42, 8);
     ASSERT_EQ(pbb_ptr, nullptr);
 }
@@ -237,7 +237,7 @@ TEST_F(PartialByteBufferTest, WriteInt_NegativeFullInt_CorrectBufferValues) {
 }
 
 TEST_F(PartialByteBufferTest, WriteInt_NullBuffer_DoNothing) {
-    PartialByteBuffer* pbb_ptr = nullptr;
+    partial_byte_buffer* pbb_ptr = nullptr;
     pbb_write_int(pbb_ptr, 0x12345678, 32);
     ASSERT_EQ(pbb_ptr, nullptr);
 }

@@ -6,7 +6,7 @@
 
 class PartialByteBufferReaderTest : public ::testing::Test {
     protected:
-        PartialByteBufferReader *pbbr = nullptr;
+        partial_byte_buffer_reader *pbbr = nullptr;
         void TearDown() override {
             pbbr = nullptr;
         }

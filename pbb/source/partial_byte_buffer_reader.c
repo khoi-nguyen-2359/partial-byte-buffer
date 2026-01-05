@@ -6,17 +6,32 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-static const uint8_t BITSIZEOF_UINT = sizeof(unsigned int) << 3;
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 
-static uint8_t read_byte(PartialByteBufferReader* pbbr, uint32_t* acc, uint8_t* read_bit_len, uint8_t available_bit_len);
-static size_t required_length(const PartialByteBufferReader* pbbr, uint8_t bit_len);
-static void extend_sign(uint32_t* value, uint8_t bit_len);
+/**
+ * Extracted function to read a byte with specified bit length from the buffer.
+ * This function is called multiple times in a higher read method until all bits are read.
+ * @param acc Accumulator to store the read value.
+ * @param read_bits Number of bits remaining to read, will be updated after each succeeded read.
+ * @param available_bits Number of bits available to read in the current byte of the buffer.
+ */
+static uint8_t read_byte(partial_byte_buffer_reader* pbbr, uint32_t* acc, uint8_t* read_bits, uint8_t available_bits);
 
-PartialByteBufferReader* pbbr_create(const uint8_t* buffer, size_t length) {
+/**
+ * Calculate the number of bytes enough for a read of [bits] bits from the current position.
+ * This is used to check if there is enough data in the buffer before reading.
+ */
+static size_t required_length(const partial_byte_buffer_reader* pbbr, uint8_t bits);
+
+/**
+ * Extend the sign bit of a value read with [bits] bits to a full integer.
+ */
+static void extend_sign(uint32_t* value, uint8_t bits);
+
+partial_byte_buffer_reader* pbbr_create(const uint8_t* buffer, size_t length) {
     if (buffer == NULL || length == 0) return NULL;
 
-    PartialByteBufferReader* pbbr = (PartialByteBufferReader*)malloc(sizeof(PartialByteBufferReader));
+    partial_byte_buffer_reader* pbbr = (partial_byte_buffer_reader*)malloc(sizeof(partial_byte_buffer_reader));
     if (pbbr != NULL) {
         uint8_t* buffer_copy = (uint8_t*)malloc(length);
         if (buffer_copy != NULL) {
@@ -33,7 +48,7 @@ PartialByteBufferReader* pbbr_create(const uint8_t* buffer, size_t length) {
     return pbbr;
 }
 
-void pbbr_destroy(PartialByteBufferReader** pbbr) {
+void pbbr_destroy(partial_byte_buffer_reader** pbbr) {
     if (pbbr != NULL && *pbbr != NULL) {
         free((*pbbr)->buffer);
         free(*pbbr);
@@ -41,48 +56,44 @@ void pbbr_destroy(PartialByteBufferReader** pbbr) {
     }
 }
 
-int8_t pbbr_read_byte(PartialByteBufferReader* pbbr, uint8_t bit_len) {
-    if (pbbr == NULL || bit_len <= 0 || bit_len > 8) return 0;
-    if (required_length(pbbr, bit_len) > pbbr->length) return 0;
+int8_t pbbr_read_byte(partial_byte_buffer_reader* pbbr, uint8_t bits) {
+    if (pbbr == NULL || bits <= 0 || bits > 8) return 0;
+    if (required_length(pbbr, bits) > pbbr->length) return 0;
 
     uint32_t result = 0;
-    uint8_t remaining_bit_len = bit_len;
+    uint8_t remaining_bit_len = bits;
     
-    read_byte(pbbr, &result, &remaining_bit_len, 8 - pbbr->bit_pos);
-    read_byte(pbbr, &result, &remaining_bit_len, 8);
+    while (remaining_bit_len > 0) {
+        read_byte(pbbr, &result, &remaining_bit_len, 8 - pbbr->bit_pos);
+    }
 
-    if (bit_len < 8) {
-        extend_sign(&result, bit_len);
+    if (bits < 8) {
+        extend_sign(&result, bits);
     }
     
     return (int8_t)result;
 }
 
-int pbbr_read_int(PartialByteBufferReader* pbbr, uint8_t bit_len) {
-    if (pbbr == NULL || bit_len <= 0 || bit_len > BITSIZEOF_INT) return 0;
-    if (required_length(pbbr, bit_len) > pbbr->length) return 0;
+int pbbr_read_int(partial_byte_buffer_reader* pbbr, uint8_t bits) {
+    if (pbbr == NULL || bits <= 0 || bits > BITSIZEOF_INT) return 0;
+    if (required_length(pbbr, bits) > pbbr->length) return 0;
 
     uint32_t result = 0;
-    uint8_t remaining_bit_len = bit_len;
+    uint8_t remaining_bit_len = bits;
     
-    read_byte(pbbr, &result, &remaining_bit_len, 8 - pbbr->bit_pos);
-    while (remaining_bit_len > 0) {
-        read_byte(pbbr, &result, &remaining_bit_len, 8);
-    }
+    while (remaining_bit_len > 0)
+        read_byte(pbbr, &result, &remaining_bit_len, 8 - pbbr->bit_pos);
 
     // Sign extension for negative values
-    if (bit_len < BITSIZEOF_INT) {
-        extend_sign(&result, bit_len);
+    if (bits < BITSIZEOF_INT) {
+        extend_sign(&result, bits);
     }
     
     return (int) result;
 }
 
-static uint8_t read_byte(PartialByteBufferReader* pbbr, uint32_t* acc, uint8_t* read_bit_len, uint8_t available_bit_len) {
-    if (*read_bit_len <= 0) return 0;
-    // printf("Reading %u bits (available: %u bits) at byte_pos: %zu, bit_pos: %u\n", *read_bit_len, available_bit_len, pbbr->byte_pos, pbbr->bit_pos);
-    
-    uint8_t bits_to_read = MIN(available_bit_len, *read_bit_len);
+static uint8_t read_byte(partial_byte_buffer_reader* pbbr, uint32_t* acc, uint8_t* read_bits, uint8_t available_bits) {
+    uint8_t bits_to_read = MIN(available_bits, *read_bits);
     
     // Extract bits from the buffer at current position
     uint8_t read = (uint8_t)(pbbr->buffer[pbbr->byte_pos] << pbbr->bit_pos) >> (8 - bits_to_read);
@@ -92,17 +103,17 @@ static uint8_t read_byte(PartialByteBufferReader* pbbr, uint32_t* acc, uint8_t* 
     uint8_t next_bit_pos = pbbr->bit_pos + bits_to_read;
     pbbr->byte_pos += next_bit_pos >> 3;
     pbbr->bit_pos = next_bit_pos & 7;
-    *read_bit_len -= bits_to_read;
+    *read_bits -= bits_to_read;
     
     return read;
 }
 
-static size_t required_length(const PartialByteBufferReader* pbbr, uint8_t bit_len) {
+static size_t required_length(const partial_byte_buffer_reader* pbbr, uint8_t bit_len) {
     return pbbr->byte_pos + ((pbbr->bit_pos + bit_len + 7) >> 3);
 }
 
-static void extend_sign(uint32_t* value, uint8_t bit_len) {
-    if (*value & (1 << (bit_len - 1))) {
-        *value |= -1 << bit_len;
+static void extend_sign(uint32_t* value, uint8_t bits) {
+    if (*value & (1 << (bits - 1))) {
+        *value |= -1 << bits;
     }
 }
