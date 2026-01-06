@@ -8,7 +8,9 @@ class PartialByteBufferTest : public ::testing::Test {
     protected:
         partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
-            pbb = nullptr;
+            if (pbb != nullptr) {
+                pbb_destroy(&pbb);
+            }
         }
 };
 
