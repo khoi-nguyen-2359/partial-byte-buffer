@@ -4,13 +4,13 @@ A growable buffer type that supports writing and reading data at bit-level sizes
 
 1. Why
 
-This buffer supports data at sub-byte level for write and read. For example you have number 33, which needs only 7 bits in binary representation (0100001, with one bit for sign) and you want to store only that 7 bits. This is useful in case the range of your data will never use up a number of full bytes for representation. We can see such scenarios in real life like: GPA (0 -> 5), Human height (0 -> a few hundreds cm), Geographic coordnate (-180 -> 180).
+This buffer supports data at sub-byte level for write and read, and is particularly useful when the range of your data will never use up a number of full bytes for representation, and especially, you are required to store them in a sequence. For example, binary representation of the number 33 needs only 7 bits (binary: 0100001, plus a sign bit), rather than a full byte. Some practical scenarios are to store sequences of value ranges like GPAs (0 - 5), human heights (0 - a few hundreds cm), or geographic coordinates (-180 to 180).
+
+Take the longitude coordinates on earth for example. Longitude values range from -180.00000° to 180.00000° (5 decimal places). Standard IEEE-754 double-precision floats use the fixed number of 11 exponent bits and 52 mantissa bits, but this range needs only 6 exponent bits and 27 mantissa bits. This helps to save 47% of normally used memory. See the [Range test cases](pbb/test/FloatResizerRangeTest.cpp) for details.
 
 1. Support operations
-    1. Buffer Write
 
-    
-    1. Buffer Read
+
 1. Extensible capacity
 
 The buffer is allocated with a small capacity at first and has ability to grow when the data to write exceed the current maximum space.
