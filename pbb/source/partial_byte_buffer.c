@@ -12,6 +12,13 @@
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
 
+static const int CAPACITY_DOUBLE = 0;
+static const int CAPACITY_ONE_HALF = 1;
+
+#ifndef CAPACITY_GROWTH_MODE
+#define CAPACITY_GROWTH_MODE CAPACITY_DOUBLE
+#endif
+
 /**
  * Extracted function to write bits of data into the current byte of a partial_byte_buffer.
  * This function is called multiple times in a higher write method until all bits are written.
@@ -44,12 +51,8 @@ partial_byte_buffer* pbb_create(int initial_capacity) {
     
     partial_byte_buffer* pbb = (partial_byte_buffer*)malloc(sizeof(partial_byte_buffer));
     if (pbb != NULL) {
-        size_t capacity = highest_one_bit(initial_capacity);
-        if (capacity < initial_capacity) {
-            capacity = next_capacity(capacity);
-        }
-        pbb->buffer = (uint8_t*)calloc(capacity, sizeof(uint8_t));
-        pbb->capacity = capacity;
+        pbb->buffer = (uint8_t*)calloc(initial_capacity, sizeof(uint8_t));
+        pbb->capacity = initial_capacity;
         pbb->bit_pos = 0;
         pbb->byte_pos = 0;
     }
@@ -138,11 +141,15 @@ static unsigned int highest_one_bit(int value) {
 }
 
 static size_t next_capacity(size_t n) {
-    size_t next_power2 = n << 1;
-    if (next_power2 <= n) {
-        return n | n >> 1;
+    switch (CAPACITY_GROWTH_MODE)
+    {
+    case CAPACITY_DOUBLE:
+        return n << 1;
+    case CAPACITY_ONE_HALF:
+        return n + (n >> 1);
+    default:
+        break;
     }
-    return next_power2;
 }
 
 static void ensure_capacity(partial_byte_buffer* pbb, uint8_t bits) {
@@ -152,7 +159,7 @@ static void ensure_capacity(partial_byte_buffer* pbb, uint8_t bits) {
 
     size_t capacity = next_capacity(pbb->capacity);
     if (capacity < required_bytes) {
-        capacity = next_capacity(highest_one_bit(required_bytes));
+        capacity = next_capacity(required_bytes);
     }
     uint8_t* new_buffer = (uint8_t*)realloc(pbb->buffer, capacity);
     if (new_buffer != NULL) {   

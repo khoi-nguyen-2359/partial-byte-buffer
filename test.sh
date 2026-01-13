@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
-TEST_FILES=${1:-"pbb/test/*.cpp"}
+TEST_FILES="pbb/test/*.cpp"
+CAPACITY_GROWTH_MODE=0
+
+while getopts "t:m:s:" opt; do
+    case "$opt" in
+        t) TEST_FILES="$OPTARG" ;;
+        m) CAPACITY_GROWTH_MODE="$OPTARG" ;;
+        *) echo "Usage: $0 [-t test_files] [-m mode]"; exit 1 ;;
+    esac
+done
 
 if [[ ! -d build ]]; then
     mkdir build
@@ -16,6 +25,7 @@ fi
 
 echo "Compiling tests with: $CXX, Sanitizer Flags: $SANITIZER_FLAGS"
 echo "Test files: $TEST_FILES"
+echo "Capacity Growth Mode: $CAPACITY_GROWTH_MODE"
 
 $CXX -std=c++17 -g \
     pbb/source/*.c \
@@ -23,6 +33,7 @@ $CXX -std=c++17 -g \
     -Ipbb/include \
     -lfmt -lgtest -lgtest_main -lpthread \
     $SANITIZER_FLAGS \
+    -DCAPACITY_GROWTH_MODE=$CAPACITY_GROWTH_MODE \
     -o build/pbb_tests
 
 if [ $? -ne 0 ]; then
