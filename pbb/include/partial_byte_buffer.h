@@ -25,7 +25,7 @@ partial_byte_buffer* pbb_create(int initial_capacity);
 void pbb_destroy(partial_byte_buffer** pbb);
 
 /**
- * Get the number of bytes have been written in a partial_byte_buffer.
+ * Get the number of bytes that have been written to a partial_byte_buffer.
  */
 size_t pbb_get_length(const partial_byte_buffer* pbb);
 

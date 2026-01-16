@@ -18,8 +18,9 @@ The buffer can be allocated with an initial capacity and has the ability to grow
 
 There are two capacity growth strategies: **Double** or **Grow By Half**, which multiply the current size by 2 or 1.5, respectively. This behavior is triggered before an actual write is executed, when the current bits plus the bits to write exceeds the capacity.
 
-## Floating-point Compression
+## 
 
+## Floating-point Compression
 
 ## TODOs
 

@@ -10,21 +10,21 @@ static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 
 /**
  * Extracted function to read a byte with specified bit length from the buffer.
- * This function is called multiple times in a higher read method until all bits are read.
+ * This function is called multiple times by a higher-level read method until all bits are read.
  * @param acc Accumulator to store the read value.
- * @param read_bits Number of bits remaining to read, will be updated after each succeeded read.
+ * @param read_bits Number of bits remaining to read; will be updated after each successful read.
  * @param available_bits Number of bits available to read in the current byte of the buffer.
  */
 static uint8_t read_byte(partial_byte_buffer_reader* pbbr, uint32_t* acc, uint8_t* read_bits, uint8_t available_bits);
 
 /**
- * Calculate the number of bytes enough for a read of [bits] bits from the current position.
+ * Return the sensible minimum number of bytes for reading [bits] bits from the current position.
  * This is used to check if there is enough data in the buffer before reading.
  */
 static size_t required_length(const partial_byte_buffer_reader* pbbr, uint8_t bits);
 
 /**
- * Extend the sign bit of a value read with [bits] bits to a full integer.
+ * Extend the sign bit of a value from [bits] bits to a full integer.
  */
 static void extend_sign(uint32_t* value, uint8_t bits);
 

@@ -21,7 +21,7 @@ static const int CAPACITY_ONE_HALF = 1;
 
 /**
  * Extracted function to write bits of data into the current byte of a partial_byte_buffer.
- * This function is called multiple times in a higher write method until all bits are written.
+ * This function is called multiple times by a higher-level write method until all bits are written.
  * @param data The data to write.
  * @param data_bits Number of bits remaining, will be updated after each succeeded write.
  * @param available_bits Number of bits available to write in the current byte of the buffer.
@@ -40,7 +40,7 @@ static size_t next_capacity(size_t n);
 static void ensure_capacity(partial_byte_buffer* pbb, uint8_t bits);
 
 /**
- * Return the number with the highest one bit in an integer value on.
+ * Return a value with only the highest set bit of the input.
  * Returns 0 if the value is 0.
  * For example, highest_one_bit(18) returns 16.
  */
