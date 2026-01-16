@@ -16,11 +16,17 @@ The buffer supports write and read methods that allow input data as a byte or in
 
 The buffer can be allocated with an initial capacity and has the ability to grow when the data to write exceeds the current maximum space.
 
-There are two capacity growth strategies: **Double** or **Grow By Half**, which multiply the current size by 2 or 1.5, respectively. This behavior is triggered before an actual write is executed, when the current bits plus the bits to write exceeds the capacity.
-
-## 
+There are two capacity growth strategies: **Grow By Double** or **Grow By Half**, which multiply the current size by 2 or 1.5, respectively. This extension behavior is triggered before an actual write is executed, when the current bits plus the bits to write exceeds the capacity.
 
 ## Floating-point Compression
+
+## Unit Test
+
+Test script ```test.sh``` supports two options:
+
+- Test file: use ```-t path/to/test/file.cpp``` to specify which test file to run.
+- Capacity extension mode: use ```-m 0|1``` with 0 is **Double** and 1 is **Grow By Half** strategy.
+
 
 ## TODOs
 
