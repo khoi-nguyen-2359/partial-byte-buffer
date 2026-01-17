@@ -13,13 +13,14 @@ TEST_F(FloatResizerTest, ResizeFloat_CompressAndRestore_ReturnsSameValue) {
     int src_mant_bits = 52;
     int dst_exp_bits = 4;
     int dst_mant_bits = 31;
+    double multiplier = 1e9;
 
     uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
     uint64_t restored = flr_resize_float_long(resized, dst_exp_bits, dst_mant_bits, src_exp_bits, src_mant_bits);
     qword wq;
     wq.uint64_val = restored;
 
-    ASSERT_NEAR(original, wq.double_val, 1e-9);
+    ASSERT_EQ((int) std::round(original * multiplier), (int) std::round(wq.double_val * multiplier));
 }
 
 TEST_F(FloatResizerTest, ResizeFloat_SmallPositiveValue_ReturnsSameValue) {

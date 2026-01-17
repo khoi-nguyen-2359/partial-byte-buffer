@@ -2,7 +2,7 @@
 
 ## Why
 
-This buffer supports writing and reading data at bit-level sizes. This is particularly useful when the values your data consists of never use up a number of full bytes in their binary representation. For example, the number 33 can be represented in only 7 bits (0100001, one bit for sign), rather than a full byte. We can easily find some practical scenarios like value ranges of GPAs (0.0 - 4.5), human heights (0 - a few hundred cm), or geographic coordinates (-180 to 180).
+This buffer supports writing and reading data at bit-level sizes. This is particularly useful when the values your data consists of never use up a number of full bytes in their binary representation. For example, the number 33 can be represented in only 7 bits (0100001, one bit for sign), rather than a full byte. We can easily find some practical scenarios like value ranges of geographic coordinates (latitude/longitude), or altitude/elevation measurements, temperature readings.
 
 Take the longitude coordinates on Earth for example. The values range from -180.00000° to 180.00000° (5 decimal places). Using the standard IEEE-754 double-precision floats needs a fixed number of 11 exponent bits and 52 mantissa bits. However, 6 exponent bits and 25 mantissa bits are actually enough for values at 5 decimal digit precision. This helps to save around 50% of normally used memory per one value. See the [Range Test Cases](pbb/test/FloatResizerRangeTest.cpp) for more examples.
 
