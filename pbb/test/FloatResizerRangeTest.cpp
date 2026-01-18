@@ -31,7 +31,7 @@ TEST_F(FloatResizerTest, ResizeFloat_LongitudeRange_RestoreEquivalentValues) {
     int dst_exp_bits = 6;
     int dst_mant_bits = 25;
 
-    for (int i = -18000000; i <= 18000000; ++i) {
+    for (int i = -180 * multiplier; i <= 180 * multiplier; ++i) {
         double original = i * precision;  // Values from -180.00000 to 180.00000
 
         uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
@@ -87,7 +87,7 @@ TEST_F(FloatResizerTest, ResizeFloat_AltitudeRange_RestoreEquivalentValues) {
     int dst_exp_bits = 5;
     int dst_mant_bits = 21;
 
-    for (int i = -50000; i <= 1500000; ++i) {
+    for (int i = -500 * multiplier; i <= 15000 * multiplier; ++i) {
         double original = i * precision;  // Values from -500.00 to 15000.00
 
         uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
@@ -115,8 +115,8 @@ TEST_F(FloatResizerTest, ResizeFloat_TemperatureRange_RestoreEquivalentValues) {
     int dst_exp_bits = 5;
     int dst_mant_bits = 17;
 
-    // Test negative range: -273.15 to 100000.00 (scaled by 100)
-    for (int i = -27315; i <= 100000; ++i) {
+    // Test negative range: -273.15 to 1000.00 (scaled by 100)
+    for (int i = -273.15 * multiplier; i <= 1000 * multiplier; ++i) {
         double original = -i * precision;
         
         uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);

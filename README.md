@@ -2,13 +2,29 @@
 
 ## Why
 
-This buffer supports writing and reading data at bit-level sizes. This is useful when your data never uses up a number of full bytes in their binary representation. For example, 33 can be represented with only 7 bits (0100001, one bit for sign), rather than a full byte. We can easily find some practical scenarios like value ranges of geographic coordinates (latitude/longitude), or altitude/elevation measurements, temperature readings.
+This buffer supports writing and reading data at bit-level sizes. This is useful when your data never uses up a number of full bytes in their binary representation. For example, 33 can be represented with only 7 bits (0100001, one bit for sign), rather than a full byte. We can easily find some practical scenarios like value ranges of geographic coordinates (latitude/longitude), or altitude/elevation, temperature, heart rates.
 
 Take the longitude coordinates on Earth for example. The values range from -180.00000° to 180.00000° (5 decimal places). Using the standard IEEE-754 double-precision floats needs a fixed number of 11 exponent bits and 52 mantissa bits. However, 6 exponent bits and 25 mantissa bits are actually enough for values at 5 decimal digit precision. This helps to save around 50% of normally used memory per one value.
 
-This space efficiency can be accumulated when you store values of the same type in one sequence.
+One example of how this space efficiency can be achieved is the content of outdoor tracking file formats (such as TCX). These files primarily consist of track points, and each track point contains measurements that can be compressed. If the recording frequency is 1 point per second during a 30-minute run, which is a normal rate, there could be numerous track points to save.
 
-## Supported Operations
+```xml
+<Trackpoint>
+    <Time>2026-01-13T18:56:39.000Z</Time>
+    <Position>
+        <LatitudeDegrees>43.9537135977298</LatitudeDegrees>
+        <LongitudeDegrees>-78.88971224427223</LongitudeDegrees>
+    </Position>
+    <AltitudeMeters>160.0</AltitudeMeters>
+    <DistanceMeters>2003.31005859375</DistanceMeters>
+    <HeartRateBpm>
+        <Value>138</Value>
+    </HeartRateBpm>
+...
+</Trackpoint>
+```
+
+## Supported Methods
 
 The buffer supports write and read methods that allow input data as a byte or integer (32 or 64 bits). The key argument is the number of valid bits related to the data to write to or read from the buffer. These are the bits that will be extracted from the input data and written to the buffer, or the bits of data to read from the buffer starting at the current position.
 
@@ -41,6 +57,8 @@ Example: Running tests for the Grow By Half strategy **must** use `-m 1`.
 ```
 
 ## TODOs
+1. Combine two structs of write and read for simplification.
+1. Add range tests.
 
 ## References
 1. Circular Buffer - https://en.wikipedia.org/wiki/Circular_buffer
