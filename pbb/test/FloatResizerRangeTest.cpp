@@ -72,14 +72,42 @@ TEST_F(FloatResizerTest, ResizeFloat_LatitudeRange_RestoreEquivalentValues) {
 }
 
 /**
- * Altitude/Elevation Range Test
- * -----------------------------
- * Range:      -500.00m (Dead Sea depression) to +15000.00m (commercial aircraft cruising altitude)
+ * Altitude/Elevation Range Test (Below Sea Level)
+ * ------------------------------------------------
+ * Range:      -500.00m (Dead Sea depression) to 0.00m (sea level)
  * Precision:  0.01m (centimeter)
- * Total:      1,550,001 test values
+ * Total:      50,001 test values
+ * Format:     5 exponent bits + 16 mantissa bits (22 bits total)
+ */
+TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeBelowSeaLevel_RestoreEquivalentValues) {
+    double precision = 0.01;
+    double multiplier = 100.0;
+    int src_exp_bits = 11;
+    int src_mant_bits = 52;
+    int dst_exp_bits = 5;
+    int dst_mant_bits = 16;
+
+    for (int i = -500 * multiplier; i <= 0; ++i) {
+        double original = i * precision;  // Values from -500.00 to 0.00
+
+        uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
+        uint64_t restored = flr_resize_float_long(resized, dst_exp_bits, dst_mant_bits, src_exp_bits, src_mant_bits);
+        qword wq;
+        wq.uint64_val = restored;
+
+        EXPECT_EQ((int) std::round(original * multiplier), (int) std::round(wq.double_val * multiplier));
+    }
+}
+
+/**
+ * Altitude/Elevation Range Test (Above Sea Level)
+ * ------------------------------------------------
+ * Range:      0.00m (sea level) to +15000.00m (commercial aircraft operating altitude)
+ * Precision:  0.01m (centimeter)
+ * Total:      1,500,001 test values
  * Format:     5 exponent bits + 21 mantissa bits (27 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_AltitudeRange_RestoreEquivalentValues) {
+TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeAboveSeaLevel_RestoreEquivalentValues) {
     double precision = 0.01;
     double multiplier = 100.0;
     int src_exp_bits = 11;
@@ -87,8 +115,8 @@ TEST_F(FloatResizerTest, ResizeFloat_AltitudeRange_RestoreEquivalentValues) {
     int dst_exp_bits = 5;
     int dst_mant_bits = 21;
 
-    for (int i = -500 * multiplier; i <= 15000 * multiplier; ++i) {
-        double original = i * precision;  // Values from -500.00 to 15000.00
+    for (int i = 0; i <= 15000 * multiplier; ++i) {
+        double original = i * precision;  // Values from 0.00 to 15000.00
 
         uint64_t resized = flr_resize_float_double(original, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
         uint64_t restored = flr_resize_float_long(resized, dst_exp_bits, dst_mant_bits, src_exp_bits, src_mant_bits);
