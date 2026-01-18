@@ -26,7 +26,20 @@ One example of where this optimization can be achieved is outdoor tracking file 
 </Trackpoint>
 ```
 
-## Supported Methods
+### Free-Space Optical Communication (Claude Code, Jan 2026)
+
+This bit-level storage efficiency is particularly valuable for **free-space optical (FSO) communication**, where data is transmitted through the atmosphere or space using laser beams rather than physical cables.
+
+In free-space channels—such as satellite-to-ground links, inter-satellite communication, or deep-space missions—bandwidth is often limited and every bit counts. Atmospheric turbulence, weather conditions, and the inverse-square law of signal attenuation make transmission challenging and expensive. By reducing the number of bits required to represent sensor data (e.g., telemetry from spacecraft, environmental monitoring from remote stations, or IoT sensor networks), we can:
+
+- **Increase effective throughput**: Transmit more meaningful data within the same channel capacity.
+- **Reduce transmission time**: Critical for time-sensitive applications or when communication windows are limited (e.g., satellite passes).
+- **Lower power consumption**: Fewer bits mean less energy required for transmission, which is crucial for battery-powered or solar-powered devices.
+- **Improve error resilience**: With fewer bits to transmit, more bandwidth can be allocated to error correction codes, improving reliability over noisy channels.
+
+For example, a CubeSat transmitting GPS coordinates and altitude data back to Earth could use partial byte encoding to compress each measurement by ~50%, effectively doubling the amount of telemetry data that can be sent during a brief ground station pass.
+
+## 2. Supported Functions
 
 The buffer supports write and read methods that allow input data as a byte or integer (32 or 64 bits). The key argument is the number of valid bits related to the data to write to or read from the buffer. These are the bits that will be extracted from the input data and written to the buffer, or the bits of data to read from the buffer starting at the current position.
 
