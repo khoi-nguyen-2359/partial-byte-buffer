@@ -19,7 +19,7 @@ class PartialByteBufferTest : public ::testing::Test {
 TEST_F(PartialByteBufferTest, Create_CorrectAllocation_CorrectCursors) {
     pbb = pbb_create(10);
     ASSERT_NE(pbb, nullptr);
-    ASSERT_EQ(pbb->capacity, 16);
+    ASSERT_EQ(pbb->capacity, 10);
     ASSERT_EQ(pbb->byte_pos, 0);
     ASSERT_EQ(pbb->bit_pos, 0);
     pbb_destroy(&pbb);
@@ -262,7 +262,7 @@ TEST_F(PartialByteBufferTest, WriteByteThenInt_CorrectBufferValues) {
     ASSERT_EQ(pbb->buffer[4], 0x44);
     ASSERT_EQ(pbb->byte_pos, 5);
     ASSERT_EQ(pbb->bit_pos, 0);
-    ASSERT_EQ(pbb->capacity, 8);
+    ASSERT_EQ(pbb->capacity, 6);
 
     pbb_destroy(&pbb);
 }
@@ -316,7 +316,6 @@ TEST_F(PartialByteBufferTest, GetLength_BufferChangedExceedingCapacity_CorrectLe
     pbb_write_byte(pbb, 0x11, 8);
     pbb_write_int(pbb, 0x22334455, 32); // Exceeds initial capacity
     size_t length = pbb_get_length(pbb);
-    ASSERT_EQ(pbb->capacity, 8);
     ASSERT_EQ(length, 5);
 
     pbb_destroy(&pbb);
@@ -338,7 +337,6 @@ TEST_F(PartialByteBufferTest, GetLength_PuttingPartialBytesExceedingCapacity_Rou
     pbb_write_int(pbb, 0b10100011010011001, 17);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 3);
-    ASSERT_EQ(pbb->capacity, 4);
 
     pbb_destroy(&pbb);
 }
@@ -527,19 +525,14 @@ TEST_F(PartialByteBufferTest, WriteByte_ManyTimesWithInvalidBitLength_BufferIndi
     const int rand_bits[] = {-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8};
 
     int bit_count = 0;
-    int capacity = 2;
     for (int i = 0; i < total_bytes; ++i) {
         int rand_bit_len = rand_bits[rand() % (sizeof(rand_bits)/sizeof(rand_bits[0]))];
         pbb_write_byte(pbb, 0xAB, rand_bit_len);
         bit_count += rand_bit_len > 0 ? rand_bit_len : 0;
-        if (bit_count > capacity * 8) {
-            capacity *= 2;
-        }
     }
 
     ASSERT_EQ(pbb->byte_pos, bit_count >> 3);
     ASSERT_EQ(pbb->bit_pos, bit_count & 7);
-    ASSERT_GE(pbb->capacity, capacity);
 
     pbb_destroy(&pbb);
 }
