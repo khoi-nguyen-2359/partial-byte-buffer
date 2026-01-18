@@ -17,22 +17,6 @@ Take the longitude coordinates on Earth for example. The values range from -180.
 
 One example of where this optimization can be achieved is outdoor tracking file formats (such as TCX, FIT). These files primarily consist of track points, and each track point contains measurements that can be compressed. If the recording frequency is 1 point per second during a 30-minute run, which is a normal rate, there could be numerous track points to save.
 
-### Free-Space Optical Communication (Claude Code, Jan 2026)
-
-*Prompt:
-Add a section about how this storage efficiency could improve information transmission in free-space.*
-
-> This bit-level storage efficiency is particularly valuable for **free-space optical (FSO) communication**, where data is transmitted through the atmosphere or space using laser beams rather than physical cables.
-> 
-> In free-space channels—such as satellite-to-ground links, inter-satellite communication, or deep-space missions—bandwidth is often limited and every bit counts. Atmospheric turbulence, weather conditions, and the inverse-square law of signal attenuation make transmission challenging and expensive. By reducing the number of bits required to represent sensor data (e.g., telemetry from spacecraft, environmental monitoring from remote stations, or IoT sensor networks), we can:
-> 
-> - **Increase effective throughput**: Transmit more meaningful data within the same channel capacity.
-> - **Reduce transmission time**: Critical for time-sensitive applications or when communication windows are limited (e.g., satellite passes).
-> - **Lower power consumption**: Fewer bits mean less energy required for transmission, which is crucial for battery-powered or solar-powered devices.
-> - **Improve error resilience**: With fewer bits to transmit, more bandwidth can be allocated to error correction codes, improving reliability over noisy channels.
-> 
-> For example, a CubeSat transmitting GPS coordinates and altitude data back to Earth could use partial byte encoding to compress each measurement by ~50%, effectively doubling the amount of telemetry data that can be sent during a brief ground station pass.
-
 ## 2. Supported Functions
 
 The buffer supports write and read methods that allow input data as a byte or integer (32 or 64 bits). The key argument is the number of valid bits related to the data to write to or read from the buffer. These are the bits that will be extracted from the input data and written to the buffer, or the bits of data to read from the buffer starting at the current position.
@@ -43,7 +27,7 @@ The buffer can be allocated with an initial capacity and has the ability to grow
 
 There are two capacity growth strategies: **Grow By Double** or **Grow By Half**, which multiply the current size by 2 or 1.5, respectively. This expansion behavior is triggered before an actual write is executed, when the current bits plus the bits to write exceeds the capacity.
 
-## 5. TODOs
+## 4. TODOs
 
 | Done | Task |
 |---|------|
@@ -55,7 +39,7 @@ There are two capacity growth strategies: **Grow By Double** or **Grow By Half**
 | ⬜ | Distant memory allocation. |
 | ⬜ | Support other operations seek, clear buffer... |
 
-## 6. References
+## 5. References
 1. Circular Buffer - https://en.wikipedia.org/wiki/Circular_buffer
 1. Linux Socket Buffer -  https://dev.to/amrelhusseiny/linux-networking-part-1-kernel-net-stack-180l 
 1. Garmin Training Center Database - TCX schema - https://www8.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd
