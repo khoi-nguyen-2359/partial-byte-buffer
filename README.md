@@ -4,14 +4,14 @@
 
 This buffer supports writing and reading data at bit-level sizes. This is useful when your data never uses up a number of full bytes in their binary representation. For example, 33 can be represented with only 7 bits (0100001, one bit for sign), rather than a full byte. We can easily find some practical scenarios like value ranges of geographic coordinates (latitude/longitude), or altitude/elevation, temperature, heart rates.
 
-Take the longitude coordinates on Earth for example. The values range from -180.00000° to 180.00000° (5 decimal places). Using the standard IEEE-754 double-precision floats needs a fixed number of 11 exponent bits and 52 mantissa bits. However, 6 exponent bits and 25 mantissa bits are actually enough for values at 5 decimal digit precision. This helps to save around 50% of normally used memory per one value.
+Take the longitude coordinates on Earth for example. The values range from -180.00000° to 180.00000° (5 decimal places). Using the standard IEEE-754 double-precision floats needs a fixed number of 11 exponent bits and 52 mantissa bits. However, 6 exponent bits and 25 mantissa bits are actually enough for values at 5 decimal digit precision. This helps to save much of normally used memory per one value.
 
-| Data Field | Standard IEEE-754 | Float Compression | Savings |
-|------------|-------------------|-------------------------|---------|
-| Longitude (5 dp) | 64 bits | 32 bits (6 exp + 25 mant + 1 sign) | 50% |
-| Latitude (5 dp) | 64 bits | 31 bits (6 exp + 24 mant + 1 sign) | 52% |
-| Aircraft Altitude (cm precision) | 32 bits | 27 bits (5 exp + 21 mant + 1 sign) | 16% |
-| Temperature (0.01°C) | 32 bits | 23 bits (5 exp + 17 mant + 1 sign) | 28% |
+| Data Field | Standard IEEE-754 | Float Compression (exp + mant + sign) |
+|------------|-------------------|-------------------------|
+| Longitude (5 dp) | 64 bits | 32 bits (6 + 25 + 1) |
+| Latitude (5 dp) | 64 bits | 31 bits (6 + 24 + 1) |
+| Aircraft Altitude (cm) | 32 bits | 27 bits (5 + 21 + 1) |
+| Temperature (0.01°C) | 32 bits | 23 bits (5 + 17 + 1) |
 
 ### Outdoor Activity Tracking
 
@@ -43,3 +43,4 @@ There are two capacity growth strategies: **Grow By Double** or **Grow By Half**
 1. Circular Buffer - https://en.wikipedia.org/wiki/Circular_buffer
 1. Linux Socket Buffer -  https://dev.to/amrelhusseiny/linux-networking-part-1-kernel-net-stack-180l 
 1. Garmin Training Center Database - TCX schema - https://www8.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd
+1. IEEE 754 Floating Point Binary Conversion - https://baseconvert.com/ieee-754-floating-point
