@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /**
- * Union to interpret floating-point binary representation from a double to a 64-bit integer and vice versa.
+ * Union to interpret binary representation of different types.
  */
 typedef union qword {
     double double_val;
@@ -12,9 +12,11 @@ typedef union qword {
 } qword;
 
 /**
- * Resize a floating point number represented as uint64_t from source format to destination format.
- * The source and destination formats are defined by the number of exponent bits and mantissa bits.
- * The sign bit is always 1 bit.
+ * Resize a floating point number from source format to destination format.
+ * The formats are defined by the number of exponent bits and mantissa bits. 
+ * The sign bit is always 1.
+ * 
+ * @param src The floating point number in its binary representation as uint64_t.
  */
 uint64_t flr_resize_float_long(
     uint64_t src, 
@@ -23,9 +25,7 @@ uint64_t flr_resize_float_long(
 );
 
 /**
- * Resize a floating point number represented as double from source format to destination format.
- * The source and destination formats are defined by the number of exponent bits and mantissa bits.
- * The sign bit is always 1 bit.
+ * A convenience wrapper of flr_resize_float_long that accepts double instead of uint64_t.
  */
 uint64_t flr_resize_float_double(
     double src, 
