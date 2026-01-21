@@ -4,6 +4,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/**
+ * Union to interpret binary representation of different types.
+ */
+typedef union qword {
+    double double_val;
+    uint64_t uint64_val;
+} qword;
+
 typedef struct partial_byte_buffer {
     /**
      * Array of bytes storing the buffer data.
@@ -63,5 +71,27 @@ int8_t pbb_read_byte(partial_byte_buffer* pbbr, uint8_t bits);
  * Read a signed integer having a length of [bits] (1-32) from the buffer.
  */
 int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits);
+
+/**
+ * Resize a floating point number from source format to destination format.
+ * The formats are defined by the number of exponent bits and mantissa bits. 
+ * The sign bit is always 1.
+ * 
+ * @param src The floating point number in its binary representation as uint64_t.
+ */
+uint64_t flr_resize_float_long(
+    uint64_t src, 
+    int src_exp_bits, int src_mant_bits,
+    int dst_exp_bits, int dst_mant_bits
+);
+
+/**
+ * A convenience wrapper of flr_resize_float_long that accepts double instead of uint64_t.
+ */
+uint64_t flr_resize_float_double(
+    double src, 
+    int src_exp_bits, int src_mant_bits,
+    int dst_exp_bits, int dst_mant_bits
+);
 
 #endif // PARTIAL_BYTE_BUFFER_H

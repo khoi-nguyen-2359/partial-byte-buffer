@@ -1,4 +1,4 @@
-#include "float_resizer.h"
+#include "partial_byte_buffer.h"
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,7 +12,7 @@ static int roundToDecimalPlaces(double value, double multiplier) {
 #define EXPECT_NEAR_ROUNDED(val1, val2, multiplier) \
     EXPECT_EQ((int) std::round(val1 * multiplier), (int) std::round(val2 * multiplier))
 
-class FloatResizerTest : public ::testing::Test {
+class FloatResizerRangeTest : public ::testing::Test {
 };
 
 /**
@@ -23,7 +23,7 @@ class FloatResizerTest : public ::testing::Test {
  * Total:      36,000,001 test values
  * Format:     6 exponent bits + 25 mantissa bits (32 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_LongitudeRange_RestoreEquivalentValues) {
+TEST_F(FloatResizerRangeTest, ResizeFloat_LongitudeRange_RestoreEquivalentValues) {
     double precision = 1e-5;
     double multiplier = 1e5;
     int src_exp_bits = 11;
@@ -51,7 +51,7 @@ TEST_F(FloatResizerTest, ResizeFloat_LongitudeRange_RestoreEquivalentValues) {
  * Total:      18,000,001 test values
  * Format:     6 exponent bits + 24 mantissa bits (31 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_LatitudeRange_RestoreEquivalentValues) {
+TEST_F(FloatResizerRangeTest, ResizeFloat_LatitudeRange_RestoreEquivalentValues) {
     double precision = 1e-5;
     double multiplier = 1e5;
     int src_exp_bits = 11;
@@ -79,7 +79,7 @@ TEST_F(FloatResizerTest, ResizeFloat_LatitudeRange_RestoreEquivalentValues) {
  * Total:      50,001 test values
  * Format:     5 exponent bits + 16 mantissa bits (22 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeBelowSeaLevel_RestoreEquivalentValues) {
+TEST_F(FloatResizerRangeTest, ResizeFloat_AltitudeRangeBelowSeaLevel_RestoreEquivalentValues) {
     double precision = 0.01;
     double multiplier = 100.0;
     int src_exp_bits = 11;
@@ -107,7 +107,7 @@ TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeBelowSeaLevel_RestoreEquivalen
  * Total:      1,500,001 test values
  * Format:     5 exponent bits + 21 mantissa bits (27 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeAboveSeaLevel_RestoreEquivalentValues) {
+TEST_F(FloatResizerRangeTest, ResizeFloat_AltitudeRangeAboveSeaLevel_RestoreEquivalentValues) {
     double precision = 0.01;
     double multiplier = 100.0;
     int src_exp_bits = 11;
@@ -135,7 +135,7 @@ TEST_F(FloatResizerTest, ResizeFloat_AltitudeRangeAboveSeaLevel_RestoreEquivalen
  * Total:      127,316 test values
  * Format:     5 exponent bits + 17 mantissa bits (23 bits total)
  */
-TEST_F(FloatResizerTest, ResizeFloat_TemperatureRange_RestoreEquivalentValues) {
+TEST_F(FloatResizerRangeTest, ResizeFloat_TemperatureRange_RestoreEquivalentValues) {
     double precision = 0.01;
     double multiplier = 100.0;
     int src_exp_bits = 11;
