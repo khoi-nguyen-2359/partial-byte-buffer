@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TEST_FILES="pbb/test/*.cpp"
+TEST_FILES="test/*.cpp"
 CAPACITY_GROWTH_MODE=0
 
 while getopts "t:m:s:" opt; do
@@ -28,9 +28,9 @@ echo "Test files: $TEST_FILES"
 echo "Capacity Growth Mode: $CAPACITY_GROWTH_MODE"
 
 $CXX -std=c++17 -g \
-    pbb/source/*.c \
+    pbb/*.c \
     $TEST_FILES \
-    -Ipbb/include \
+    -Ipbb \
     -lfmt -lgtest -lgtest_main -lpthread \
     $SANITIZER_FLAGS \
     -DCAPACITY_GROWTH_MODE=$CAPACITY_GROWTH_MODE \
