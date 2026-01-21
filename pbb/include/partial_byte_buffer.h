@@ -5,10 +5,25 @@
 #include <stddef.h>
 
 typedef struct partial_byte_buffer {
+    /**
+     * Array of bytes storing the buffer data.
+     */
     uint8_t* buffer;
+
+    /**
+     * Number of bytes allocated for the buffer array.
+     */
     size_t capacity;
-    size_t byte_pos;
-    uint8_t bit_pos;
+
+    /**
+     * Bit position for the next write operation.
+     */
+    size_t write_pos;
+
+    /**
+     * Bit position for the next read operation.
+     */
+    size_t read_pos;
 } partial_byte_buffer;
 
 /**
@@ -40,18 +55,13 @@ void pbb_write_byte(partial_byte_buffer* pbb, int8_t byte, uint8_t bits);
 void pbb_write_int(partial_byte_buffer* pbb, int value, uint8_t bits);
 
 /**
- * Clone the partial_byte_buffer's buffer to a newly allocated byte array.
- * The size of the array is returned via [len].
- * Returns NULL if the buffer is empty or if [pbb] is NULL.
- * The caller is responsible for freeing the returned array.
+ * Read a signed byte having a length of [bits] (1-8) from the buffer.
  */
-uint8_t* pbb_to_byte_array(const partial_byte_buffer* pbb, size_t* len);
+int8_t pbb_read_byte(partial_byte_buffer* pbbr, uint8_t bits);
 
 /**
- * Get the internal buffer array of the partial_byte_buffer.
- * The size of the valid data in the buffer is returned via [len].
- * Returns NULL if [pbb] is NULL.
+ * Read a signed integer having a length of [bits] (1-32) from the buffer.
  */
-uint8_t* pbb_get_buffer_array(const partial_byte_buffer* pbb, size_t* len);
+int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits);
 
 #endif // PARTIAL_BYTE_BUFFER_H
