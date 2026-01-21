@@ -23,8 +23,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteByte_ExceedCapacityOnce_Buf
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->buffer[2], 0x33);
-    ASSERT_EQ(pbb->byte_pos, 3);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 24);
     ASSERT_EQ(pbb->capacity, 3);
 
     pbb_destroy(&pbb);
@@ -39,14 +38,12 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteByte_ExceedCapacityTwice_Bu
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->buffer[2], 0x33);
-    ASSERT_EQ(pbb->byte_pos, 3);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 24);
     ASSERT_EQ(pbb->capacity, 3);
 
     pbb_write_byte(pbb, 0x44, 8);  // This should exceed capacity again
     ASSERT_EQ(pbb->buffer[3], 0x44);
-    ASSERT_EQ(pbb->byte_pos, 4);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 32);
     ASSERT_EQ(pbb->capacity, 4);
 
     pbb_destroy(&pbb);
@@ -63,8 +60,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteInt_ExceedCapacityOnce_Buff
     ASSERT_EQ(pbb->buffer[2], 0x33);
     ASSERT_EQ(pbb->buffer[3], 0x44);
     ASSERT_EQ(pbb->capacity, 6);
-    ASSERT_EQ(pbb->byte_pos, 4);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 32);
 
     pbb_destroy(&pbb);
 }
@@ -79,8 +75,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, PutPartialByteThenPartialInt_Exc
     ASSERT_EQ(pbb->buffer[0], 0b10100101);
     ASSERT_EQ(pbb->buffer[1], 0b01011110);
     ASSERT_EQ(pbb->buffer[2], 0b10000000);
-    ASSERT_EQ(pbb->byte_pos, 2);
-    ASSERT_EQ(pbb->bit_pos, 1);
+    ASSERT_EQ(pbb->write_pos, 17);
     ASSERT_EQ(pbb->capacity, 3);
 
     pbb_destroy(&pbb);
@@ -106,8 +101,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteByte_ExactlyAtCapacity_NoGr
 
     ASSERT_EQ(pbb->buffer[0], 0xAA);
     ASSERT_EQ(pbb->buffer[1], 0xBB);
-    ASSERT_EQ(pbb->byte_pos, 2);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 16);
     ASSERT_EQ(pbb->capacity, 2);  // No growth should happen yet
 
     pbb_destroy(&pbb);
@@ -124,8 +118,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WritePartialByte_AtMaxCap_GrowsA
     ASSERT_EQ(pbb->buffer[0], 0xFF);
     ASSERT_EQ(pbb->buffer[1], 0xF0);
     ASSERT_EQ(pbb->buffer[2], 0xA0);
-    ASSERT_EQ(pbb->byte_pos, 2);
-    ASSERT_EQ(pbb->bit_pos, 4);
+    ASSERT_EQ(pbb->write_pos, 20);
     ASSERT_EQ(pbb->capacity, 3);  // 2 + 2/2 = 3
 
     pbb_destroy(&pbb);
@@ -145,8 +138,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteInt_PartialBytesWithinCap_C
     ASSERT_EQ(pbb->buffer[2], 0b01101111);
     ASSERT_EQ(pbb->buffer[3], 0b01111000);
 
-    ASSERT_EQ(pbb->byte_pos, 3);
-    ASSERT_EQ(pbb->bit_pos, 5);
+    ASSERT_EQ(pbb->write_pos, 29);
     ASSERT_EQ(pbb->capacity, 4);
 
     pbb_destroy(&pbb);
@@ -167,8 +159,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, WriteFullBytes_WriteMultipleTime
     for (int i = 0; i < 16; i++) {
         ASSERT_EQ(pbb->buffer[i], (uint8_t)(i + 1));
     }
-    ASSERT_EQ(pbb->byte_pos, 16);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 128);
     ASSERT_EQ(pbb->capacity, 19);  // 2 -> 3 -> 4 -> 6 -> 9 -> 13 -> 19 (1.5x growth)
 
     pbb_destroy(&pbb);
@@ -213,8 +204,7 @@ TEST_F(PartialByteBufferCapacityOneAndHalfTest, AlternatingBytesAndInts_Multiple
     ASSERT_EQ(pbb->buffer[5], 0xFF);
     ASSERT_EQ(pbb->buffer[6], 0x11);
     ASSERT_EQ(pbb->buffer[7], 0x22);
-    ASSERT_EQ(pbb->byte_pos, 8);
-    ASSERT_EQ(pbb->bit_pos, 0);
+    ASSERT_EQ(pbb->write_pos, 64);
     ASSERT_EQ(pbb->capacity, 12);  
     // 2 -> 4 (1.5x growth from 3)
     // 4 -> 12 (1.5x growth from 8)
