@@ -10,6 +10,7 @@
 
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
 static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
+static const uint8_t BITSIZEOF_INT64 = sizeof(int64_t) << 3;
 
 static const int CAPACITY_DOUBLE = 0;
 static const int CAPACITY_HALF = 1;
@@ -21,21 +22,21 @@ static const int CAPACITY_HALF = 1;
 /**
  * Extracted function to write data into the current byte of partial_byte_buffer.
  * This function is called multiple times to write a number of data bits at a time, until all bits are written.
- * @param data The data to write.
+ * @param data The data to write. Use 64-bit to accommodate supported types.
  * @param data_bits Number of data bits remaining, will be updated after each succeeded write.
  */
-static void write_byte(partial_byte_buffer* pbb, uint32_t data, uint8_t* data_bits);
+static void write_byte(partial_byte_buffer* pbb, uint64_t data, uint8_t* data_bits);
 
 /**
- * Extracted function to read a byte with specified bit length from the buffer.
+ * Extracted function to read a byte with specified bit length from the buffer into an accumulator.
  * This function is called multiple times by a higher-level read method until all bits are read.
- * @param acc Accumulator to store the read value.
+ * @param acc Accumulator to store the read value. Use 64-bit to accommodate supported types.
  * @param read_bits Number of bits remaining to read; will be updated after each successful read.
  */
-static uint8_t read_byte(partial_byte_buffer* pbbr, uint32_t* acc, uint8_t* read_bits);
+static uint8_t read_byte(partial_byte_buffer* pbbr, uint64_t* acc, uint8_t* read_bits);
 
 /**
- * Return the sensible minimum number of bytes for reading [bits] bits from the current position.
+ * Return a sensible minimum number of bytes for reading [bits] bits from the current position.
  * This is used to check if there is enough data in the buffer before reading.
  */
 static size_t required_length(const partial_byte_buffer* pbbr, uint8_t bits);
@@ -53,9 +54,9 @@ static size_t next_capacity(size_t n);
 static void ensure_capacity(partial_byte_buffer* pbb, uint8_t bits);
 
 /**
- * Extend the sign bit of a value from [bits] bits to a full integer.
+ * Extend the sign bit of a 64-bit value from [bits] bits to a full 64-bit integer.
  */
-static void extend_sign(uint32_t* value, uint8_t bits);
+static void extend_sign(uint64_t* value, uint8_t bits);
 
 partial_byte_buffer* pbb_create(int initial_capacity) {
     if (initial_capacity <= 0) return NULL;
@@ -116,7 +117,7 @@ int8_t pbb_read_byte(partial_byte_buffer* pbbr, uint8_t bits) {
     if (pbbr == NULL || bits <= 0 || bits > 8) return 0;
     if (required_length(pbbr, bits) > pbb_get_length(pbbr)) return 0;
 
-    uint32_t result = 0;
+    uint64_t result = 0;
     uint8_t remaining_bit_len = bits;
     
     while (remaining_bit_len > 0) {
@@ -134,7 +135,7 @@ int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits) {
     if (pbbr == NULL || bits <= 0 || bits > BITSIZEOF_INT) return 0;
     if (required_length(pbbr, bits) > pbb_get_length(pbbr)) return 0;
 
-    uint32_t result = 0;
+    uint64_t result = 0;
     uint8_t remaining_bit_len = bits;
     
     while (remaining_bit_len > 0) {
@@ -147,6 +148,36 @@ int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits) {
     }
     
     return (int) result;
+}
+
+void pbb_write_int64(partial_byte_buffer* pbb, int64_t value, uint8_t bits) {
+    if (pbb == NULL || bits <= 0 || bits > BITSIZEOF_INT64) return;
+
+    ensure_capacity(pbb, bits);
+    
+    uint8_t remaining_bits = bits;
+    while (remaining_bits > 0) {
+        write_byte(pbb, value, &remaining_bits);
+    }
+}
+
+int64_t pbb_read_int64(partial_byte_buffer* pbbr, uint8_t bits) {
+    if (pbbr == NULL || bits <= 0 || bits > BITSIZEOF_INT64) return 0;
+    if (required_length(pbbr, bits) > pbb_get_length(pbbr)) return 0;
+
+    uint64_t result = 0;
+    uint8_t remaining_bit_len = bits;
+    
+    while (remaining_bit_len > 0) {
+        read_byte(pbbr, &result, &remaining_bit_len);
+    }
+
+    // Sign extension for negative values
+    if (bits < BITSIZEOF_INT64) {
+        extend_sign(&result, bits);
+    }
+    
+    return (int64_t) result;
 }
 
 uint64_t flr_resize_float_long(
@@ -206,7 +237,7 @@ uint64_t flr_resize_float_double(
     return flr_resize_float_long(wq.uint64_val, src_exp_bits, src_mant_bits, dst_exp_bits, dst_mant_bits);
 }
 
-static uint8_t read_byte(partial_byte_buffer* pbbr, uint32_t* acc, uint8_t* read_bits) {
+static uint8_t read_byte(partial_byte_buffer* pbbr, uint64_t* acc, uint8_t* read_bits) {
     uint8_t available_bits = 8 - (pbbr->read_pos & 7);
     uint8_t bits_to_read = MIN(available_bits, *read_bits);
     
@@ -223,14 +254,14 @@ static uint8_t read_byte(partial_byte_buffer* pbbr, uint32_t* acc, uint8_t* read
     return read;
 }
 
-static void write_byte(partial_byte_buffer* pbb, uint32_t data, uint8_t* data_bits) {
+static void write_byte(partial_byte_buffer* pbb, uint64_t data, uint8_t* data_bits) {
     /** 
      * Concatenate data bits at the write cursor position.
      */
     size_t byte_pos = pbb->write_pos >> 3;
     uint8_t available_bits = 8 - (pbb->write_pos & 7);
     uint8_t write_bits = MIN(available_bits, *data_bits);
-    pbb->buffer[byte_pos] |= data << (32 - *data_bits) >> (32 - write_bits) << (available_bits - write_bits);
+    pbb->buffer[byte_pos] |= data << (64 - *data_bits) >> (64 - write_bits) << (available_bits - write_bits);
 
     // Update the write cursor
     pbb->write_pos += write_bits;
@@ -274,9 +305,11 @@ static void ensure_capacity(partial_byte_buffer* pbb, uint8_t bits) {
     pbb->capacity = capacity;
 }
 
-static void extend_sign(uint32_t* value, uint8_t bits) {
-    if (*value & (1 << (bits - 1))) {
-        *value |= -1 << bits;
+static void extend_sign(uint64_t* value, uint8_t bits) {
+    if (bits == 0 || bits >= 64) return;
+    
+    if (*value & ((uint64_t)1 << (bits - 1))) {
+        *value |= (uint64_t)-1 << bits;
     }
 }
 

@@ -73,6 +73,16 @@ int8_t pbb_read_byte(partial_byte_buffer* pbbr, uint8_t bits);
 int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits);
 
 /**
+ * Write a 64-bit integer having a length of [bits] (1-64) to the buffer.
+ */
+void pbb_write_int64(partial_byte_buffer* pbb, int64_t value, uint8_t bits);
+
+/**
+ * Read a signed 64-bit integer having a length of [bits] (1-64) from the buffer.
+ */
+int64_t pbb_read_int64(partial_byte_buffer* pbbr, uint8_t bits);
+
+/**
  * Resize a floating point number from source format to destination format.
  * The formats are defined by the number of exponent bits and mantissa bits. 
  * The sign bit is always 1.
