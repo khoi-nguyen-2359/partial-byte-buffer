@@ -31,7 +31,8 @@ There are two capacity growth strategies: **Grow By Double** or **Grow By Half**
 
 | Done | Task |
 |---|------|
-| ⬜ | Combine two structs of write and read for simplification. |
+| ✅ | Combine two structs of write and read for simplification. |
+| ⬜ | Add read & write for 64 bit integers |
 | ⬜ | Find more data types to add to range tests. |
 | ⬜ | Bounded-size capacity behaviour. |
 | ⬜ | Full/Empty buffer read/write. |
