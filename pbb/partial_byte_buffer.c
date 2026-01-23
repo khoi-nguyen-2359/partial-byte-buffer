@@ -81,7 +81,7 @@ partial_byte_buffer* pbb_create(int initial_capacity) {
 }
 
 void pbb_destroy(partial_byte_buffer** pbb) {
-    if ((*pbb)->buffer != NULL) free((*pbb)->buffer);
+    if (*pbb != NULL && (*pbb)->buffer != NULL) free((*pbb)->buffer);
     if (pbb != NULL) free(*pbb);
     *pbb = NULL;
 }

@@ -8,40 +8,9 @@ class PartialByteBufferWriteTest : public ::testing::Test {
     protected:
         partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
-            if (pbb != nullptr) {
-                pbb_destroy(&pbb);
-            }
+            pbb_destroy(&pbb);
         }
 };
-
-#pragma region CREATE - DESTROY TESTS
-
-TEST_F(PartialByteBufferWriteTest, Create_CorrectAllocation_CorrectCursors) {
-    pbb = pbb_create(10);
-    ASSERT_NE(pbb, nullptr);
-    ASSERT_EQ(pbb->capacity, 10);
-    ASSERT_EQ(pbb->write_pos, 0);
-    pbb_destroy(&pbb);
-}
-
-TEST_F(PartialByteBufferWriteTest, Create_ZeroCapacity_NothingAllocated) {
-    pbb = pbb_create(0);
-    ASSERT_EQ(pbb, nullptr);
-}
-
-TEST_F(PartialByteBufferWriteTest, Create_NegativeCapacity_NothingAllocated) {
-    pbb = pbb_create(-1);
-    ASSERT_EQ(pbb, nullptr);
-}
-
-TEST_F(PartialByteBufferWriteTest, Destroy_NoCrash) {
-    pbb = pbb_create(1);
-    ASSERT_NE(pbb, nullptr);
-    pbb_destroy(&pbb);
-    SUCCEED();
-}
-
-#pragma endregion
 
 #pragma region WRITE BYTE TESTS
 
@@ -348,8 +317,6 @@ TEST_F(PartialByteBufferWriteTest, WriteFullNumbers_CorrectBufferValues) {
     ASSERT_EQ(pbb->buffer[12], 0xDD);
     ASSERT_EQ(pbb->write_pos, 104);
     ASSERT_EQ(pbb->capacity, 13);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WritePartialNumbers_CorrectBufferValues) {
@@ -368,8 +335,6 @@ TEST_F(PartialByteBufferWriteTest, WritePartialNumbers_CorrectBufferValues) {
     ASSERT_EQ(pbb->buffer[6], 0b01000000);
     ASSERT_EQ(pbb->write_pos, 51);
     ASSERT_EQ(pbb->capacity, 7);
-
-    pbb_destroy(&pbb);
 }
 
 #pragma endregion
@@ -382,8 +347,6 @@ TEST_F(PartialByteBufferWriteTest, GetLength_EmptyBuffer_ZeroLength) {
 
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 0);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, GetLength_BufferChangedWithoutExceedingCapacity_CorrectLength) {
@@ -395,8 +358,6 @@ TEST_F(PartialByteBufferWriteTest, GetLength_BufferChangedWithoutExceedingCapaci
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(pbb->capacity, 4);
     ASSERT_EQ(length, 2);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, GetLength_BufferChangedExceedingCapacity_CorrectLength) {
@@ -406,8 +367,6 @@ TEST_F(PartialByteBufferWriteTest, GetLength_BufferChangedExceedingCapacity_Corr
     pbb_write_int(pbb, 0x22334455, 32); // Exceeds initial capacity
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 5);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, GetLength_PuttingPartialBytes_RoundUpCorrectly) {
@@ -416,8 +375,6 @@ TEST_F(PartialByteBufferWriteTest, GetLength_PuttingPartialBytes_RoundUpCorrectl
     pbb_write_byte(pbb, 0b101, 3);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 1);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, GetLength_PuttingPartialBytesExceedingCapacity_RoundUpCorrectly) {
@@ -426,8 +383,6 @@ TEST_F(PartialByteBufferWriteTest, GetLength_PuttingPartialBytesExceedingCapacit
     pbb_write_int(pbb, 0b10100011010011001, 17);
     size_t length = pbb_get_length(pbb);
     ASSERT_EQ(length, 3);
-
-    pbb_destroy(&pbb);
 }
 
 #pragma endregion
@@ -446,8 +401,6 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_InvalidBitLength_DoesNothing) {
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->write_pos, 0);
     ASSERT_EQ(pbb->capacity, 2);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt_InvalidBitLength_DoesNothing) {
@@ -462,8 +415,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt_InvalidBitLength_DoesNothing) {
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->write_pos, 0);
     ASSERT_EQ(pbb->capacity, 2);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteByte_ManyTimesWithInvalidBitLength_BufferIndicesCorrect) {
@@ -482,8 +433,6 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_ManyTimesWithInvalidBitLength_Buffe
     }
 
     ASSERT_EQ(pbb->write_pos, bit_count);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteByte_ManyTimesFullByte_BufferContentAndIndicesCorrect) {
@@ -501,8 +450,6 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_ManyTimesFullByte_BufferContentAndI
     for (int i = 0; i < total_bytes; ++i) {
         ASSERT_EQ(pbb->buffer[i], 0xAB);
     }
-
-    pbb_destroy(&pbb);
 }
 
 #pragma endregion

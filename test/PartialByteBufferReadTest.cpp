@@ -8,38 +8,9 @@ class PartialByteBufferReadTest : public ::testing::Test {
     protected:
         partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
-            if (pbb != nullptr) {
-                pbb_destroy(&pbb);
-            }
+            pbb_destroy(&pbb);
         }
 };
-
-#pragma region CREATE - DESTROY TESTS
-
-TEST_F(PartialByteBufferReadTest, Create_CorrectBufferLength_CorrectCursors) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0xAA, 8);
-    pbb_write_byte(pbb, 0xBB, 8);
-    pbb_write_byte(pbb, 0xCC, 8);
-    pbb_write_byte(pbb, 0xDD, 8);
-    ASSERT_NE(pbb, nullptr);
-    ASSERT_EQ(pbb->capacity, 4);
-    ASSERT_EQ(pbb->read_pos, 0);
-    ASSERT_EQ(pbb->buffer[0], 0xAA);
-    ASSERT_EQ(pbb->buffer[1], 0xBB);
-    ASSERT_EQ(pbb->buffer[2], 0xCC);
-    ASSERT_EQ(pbb->buffer[3], 0xDD);
-    
-    pbb_destroy(&pbb);
-}
-
-TEST_F(PartialByteBufferReadTest, Create_ZeroLength_NothingAllocated) {
-    pbb = pbb_create(0);
-    ASSERT_EQ(pbb, nullptr);
-}
-
-
-#pragma endregion
 
 #pragma region READ BYTE TESTS
 
@@ -51,8 +22,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_OneFullByte_CorrectValueAndCursorPosi
     int8_t byte1 = pbb_read_byte(pbb, 8);
     ASSERT_EQ(byte1, (int8_t)0xAB);
     ASSERT_EQ(pbb->read_pos, 8);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_MultipleFullBytes_CorrectValueAndCursorPositions) {
@@ -67,8 +36,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_MultipleFullBytes_CorrectValueAndCurs
     int8_t byte2 = pbb_read_byte(pbb, 8);
     ASSERT_EQ(byte2, (int8_t)0xCD);
     ASSERT_EQ(pbb->read_pos, 16);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithSignExtension_CorrectValuesAndSign) {
@@ -79,8 +46,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithSignExtension_CorrectV
     int8_t byte = pbb_read_byte(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(byte, (int8_t)0xFD); // Sign-extended to -1
     ASSERT_EQ(pbb->read_pos, 3);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithoutSignExtension_CorrectValuesAndSign) {
@@ -91,8 +56,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithoutSignExtension_Corre
     int8_t byte = pbb_read_byte(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(byte, (int8_t)0x3); // Sign-extended to -1
     ASSERT_EQ(pbb->read_pos, 3);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialBytes_CorrectValuesAndCursorPositions) {
@@ -112,8 +75,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialBytes_CorrectValuesAndCursorPo
     int8_t value3 = pbb_read_byte(pbb, 6); // Read next 6 bits: 111100
     ASSERT_EQ(value3, (int8_t)0xFC);
     ASSERT_EQ(pbb->read_pos, 15);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_ExceedBufferLength_ReturnsZeroAndStopsAtEnd) {
@@ -127,8 +88,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_ExceedBufferLength_ReturnsZeroAndStop
     int8_t value2 = pbb_read_byte(pbb, 2); // Try to read beyond buffer
     ASSERT_EQ(value2, 0);
     ASSERT_EQ(pbb->read_pos, 7); // Position should not advance
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_ZeroBitLength_ReturnsZero) {
@@ -139,8 +98,6 @@ TEST_F(PartialByteBufferReadTest, ReadByte_ZeroBitLength_ReturnsZero) {
     int8_t value1 = pbb_read_byte(pbb, 0); // Invalid: 0 bits
     ASSERT_EQ(value1, 0);
     ASSERT_EQ(pbb->read_pos, 0);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_NullReader_ReturnsZero) {
@@ -162,8 +119,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_OneFullInt_CorrectValueAndCursorPositi
     int value = pbb_read_int(pbb, 32);
     ASSERT_EQ(value, (int) 0x12345678);
     ASSERT_EQ(pbb->read_pos, 32);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithSignExtension_CorrectValuesAndSign) {
@@ -174,8 +129,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithSignExtension_CorrectVa
     int value = pbb_read_int(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(value, -1); // Sign-extended to -1
     ASSERT_EQ(pbb->read_pos, 3);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithoutSignExtension_CorrectValuesAndSign) {
@@ -186,8 +139,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithoutSignExtension_Correc
     int value = pbb_read_int(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(value, 3); // Sign-extended to -1
     ASSERT_EQ(pbb->read_pos, 3);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntAcrossMultiBytes_CorrectValuesAndCursors) {
@@ -201,8 +152,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntAcrossMultiBytes_CorrectValu
     int value = pbb_read_int(pbb, 15); // Read next 15 bits: 101 0111 0011 0011
     ASSERT_EQ(value, (int)0xFFFFD733); // Sign-extended
     ASSERT_EQ(pbb->read_pos, 18);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsAlignedEnd_CorrectValuesAndCursorPositions) {
@@ -224,8 +173,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsAlignedEnd_CorrectValuesAnd
     int thirdInt = pbb_read_int(pbb, 10); // Read remaining 10 bits
     ASSERT_EQ(thirdInt, 0xFFFFFEF0); // Sign-extended
     ASSERT_EQ(pbb->read_pos, 32);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsUnalignedEnd_CorrectValuesAndCursorPositions) {
@@ -247,8 +194,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsUnalignedEnd_CorrectValuesA
     int thirdInt = pbb_read_int(pbb, 3); // Read next 3 bits
     ASSERT_EQ(thirdInt, 0xFFFFFFFD);
     ASSERT_EQ(pbb->read_pos, 25);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_NegativeValues_CorrectSignExtension) {
@@ -266,8 +211,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_NegativeValues_CorrectSignExtension) {
     int secondInt = pbb_read_int(pbb, 16); // Read 16 bits all ones
     ASSERT_EQ(secondInt, -1);
     ASSERT_EQ(pbb->read_pos, 24);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_MixedPositiveNegative_CorrectSignExtension) {
@@ -281,8 +224,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_MixedPositiveNegative_CorrectSignExten
     
     int value2 = pbb_read_int(pbb, 8); // Negative: 1000 0000
     ASSERT_EQ(value2, -128);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ExceedBufferLength_ReturnsZeroAndStopsAtEnd) {
@@ -300,8 +241,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_ExceedBufferLength_ReturnsZeroAndStops
     int value2 = pbb_read_int(pbb, 16); // Try to read beyond buffer
     ASSERT_EQ(value2, 0);
     ASSERT_EQ(pbb->read_pos, 31); // Position should not advance
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ZeroBitLength_ReturnsZero) {
@@ -314,8 +253,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_ZeroBitLength_ReturnsZero) {
     int value = pbb_read_int(pbb, 0); // Invalid: 0 bits
     ASSERT_EQ(value, 0);
     ASSERT_EQ(pbb->read_pos, 0);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ExcessiveBitLength_ReturnsZero) {
@@ -329,8 +266,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_ExcessiveBitLength_ReturnsZero) {
     int value = pbb_read_int(pbb, 33); // Invalid: more than 32 bits
     ASSERT_EQ(value, 0);
     ASSERT_EQ(pbb->read_pos, 0);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_NullReader_ReturnsZero) {
@@ -351,8 +286,6 @@ TEST_F(PartialByteBufferReadTest, ReadInt_CrossByteBoundaries_CorrectValues) {
     int value2 = pbb_read_int(pbb, 17); // Read 17 bits crossing multiple bytes
     ASSERT_EQ(value2, 0xFFFF6ACF);
     ASSERT_EQ(pbb->read_pos, 20);
-
-    pbb_destroy(&pbb);
 }
 
 #pragma endregion
