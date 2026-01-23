@@ -42,6 +42,13 @@ typedef struct partial_byte_buffer {
 partial_byte_buffer* pbb_create(int initial_capacity);
 
 /**
+ * Create a partial_byte_buffer from an existing byte array with fixed size.
+ * The data is copied into the newly created buffer.
+ * Returns NULL for invalid parameters or if memory allocation fails.
+ */
+partial_byte_buffer* pbb_from_array(const uint8_t* array, size_t size);
+
+/**
  * Destroy a partial_byte_buffer and free its resources.
  * Sets the pointer to NULL after destruction.
  */

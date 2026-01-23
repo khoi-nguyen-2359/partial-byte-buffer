@@ -80,6 +80,26 @@ partial_byte_buffer* pbb_create(int initial_capacity) {
     return pbb;
 }
 
+partial_byte_buffer* pbb_from_array(const uint8_t* array, size_t size) {
+    if (array == NULL || size == 0) return NULL;
+    
+    partial_byte_buffer* pbb = (partial_byte_buffer*)malloc(sizeof(partial_byte_buffer));
+    if (pbb == NULL) return NULL;
+    
+    pbb->buffer = (uint8_t*)malloc(size);
+    if (pbb->buffer == NULL) {
+        free(pbb);
+        return NULL;
+    }
+    
+    memcpy(pbb->buffer, array, size);
+    pbb->capacity = size;
+    pbb->write_pos = size * 8;
+    pbb->read_pos = 0;
+    
+    return pbb;
+}
+
 void pbb_destroy(partial_byte_buffer** pbb) {
     if (*pbb != NULL && (*pbb)->buffer != NULL) free((*pbb)->buffer);
     if (pbb != NULL) free(*pbb);
