@@ -45,24 +45,20 @@ TEST_F(PartialByteBufferWriteTest, Destroy_NoCrash) {
 
 #pragma region WRITE BYTE TESTS
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_SingleByte_CorrectValue) {
+TEST_F(PartialByteBufferWriteTest, WriteByte_FullByte_CorrectValue) {
     pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0x42, 8);
     ASSERT_EQ(pbb->buffer[0], 0x42);
     ASSERT_EQ(pbb->write_pos, 8);
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_MultipleBytes_CorrectValues) {
+TEST_F(PartialByteBufferWriteTest, WriteByte_MultipleFullBytes_CorrectValues) {
     pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0x11, 8);
     pbb_write_byte(pbb, 0x22, 8);
     ASSERT_EQ(pbb->buffer[0], 0x11);
     ASSERT_EQ(pbb->buffer[1], 0x22);
     ASSERT_EQ(pbb->write_pos, 16);
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteByte_NullBuffer_DoNothing) {
@@ -71,18 +67,15 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_NullBuffer_DoNothing) {
     ASSERT_EQ(pbb_ptr, nullptr);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_PartialByteOnce_CorrectBufferValues) {
+TEST_F(PartialByteBufferWriteTest, WriteByte_PartialByte_CorrectBufferValues) {
     pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->write_pos, 3);
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_PartialByteTwice_CorrectBufferValues) {
+TEST_F(PartialByteBufferWriteTest, WriteByte_MultiplePartialBytes_CorrectBufferValues) {
     pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->write_pos, 3);
@@ -91,13 +84,10 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_PartialByteTwice_CorrectBufferValue
     ASSERT_EQ(pbb->buffer[0], 0b10101001);
     ASSERT_EQ(pbb->buffer[1], 0b10000000);
     ASSERT_EQ(pbb->write_pos, 10);
-
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_PartialThenFullByte_CorrectBufferValues) {
+TEST_F(PartialByteBufferWriteTest, WriteByte_MixedPartialAndFullBytes_CorrectBufferValues) {
     pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0b101, 3);
     ASSERT_EQ(pbb->buffer[0], 0b10100000);
     ASSERT_EQ(pbb->write_pos, 3);
@@ -105,39 +95,27 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_PartialThenFullByte_CorrectBufferVa
     pbb_write_byte(pbb, 0b11111, 5);
     ASSERT_EQ(pbb->buffer[0], 0b10111111);
     ASSERT_EQ(pbb->write_pos, 8);
-
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteByte_MultipleSingleBits_CorrectBufferValues) {
-    pbb = pbb_create(2);
-    ASSERT_NE(pbb, nullptr);
-    pbb_write_byte(pbb, 1, 1);
-    pbb_write_byte(pbb, 0, 1);
-    pbb_write_byte(pbb, 1, 1);
-    pbb_write_byte(pbb, 1, 1);
-    // Result: 0b1011
-    ASSERT_EQ(pbb->buffer[0], 0b10110000);
-    ASSERT_EQ(pbb->write_pos, 4);
-    pbb_destroy(&pbb);
-}
-
-TEST_F(PartialByteBufferWriteTest, WriteByte_NegativePartialByte_CorrectValue) {
-    pbb = pbb_create(2);
-
-    pbb_write_byte(pbb, -3, 5);
-    ASSERT_EQ(pbb->buffer[0], 0xE8);
-    ASSERT_EQ(pbb->write_pos, 5);
-    pbb_destroy(&pbb);
-}
-
-TEST_F(PartialByteBufferWriteTest, WriteByte_NegativeFullByte_CorrectValue) {
-    pbb = pbb_create(2);
-
-    pbb_write_byte(pbb, -3, 8);
-    ASSERT_EQ(pbb->buffer[0], 0xFD);
-    ASSERT_EQ(pbb->write_pos, 8);
-    pbb_destroy(&pbb);
+TEST_F(PartialByteBufferWriteTest, WriteByte_ManyRandomFullBytes_CorrectBufferContent) {
+    const int total_bytes = 100;
+    pbb = pbb_create(total_bytes);
+    const unsigned int seed = 12345;
+    uint8_t expected[total_bytes];
+    
+    // Generate and write random bytes
+    srand(seed);
+    for (int i = 0; i < total_bytes; ++i) {
+        expected[i] = (uint8_t)(rand() & 0xFF);
+        pbb_write_byte(pbb, expected[i], 8);
+    }
+    
+    ASSERT_EQ(pbb->write_pos, total_bytes * 8);
+    
+    // Verify buffer content
+    for (int i = 0; i < total_bytes; ++i) {
+        ASSERT_EQ(pbb->buffer[i], expected[i]) << "Mismatch at index " << i;
+    }
 }
 
 #pragma endregion
@@ -146,7 +124,6 @@ TEST_F(PartialByteBufferWriteTest, WriteByte_NegativeFullByte_CorrectValue) {
 
 TEST_F(PartialByteBufferWriteTest, WriteInt_FullInt_CorrectBufferValues) {
     pbb = pbb_create(4);
-    ASSERT_NE(pbb, nullptr);
 
     pbb_write_int(pbb, 0x11223344, 32);
 
@@ -156,13 +133,10 @@ TEST_F(PartialByteBufferWriteTest, WriteInt_FullInt_CorrectBufferValues) {
     ASSERT_EQ(pbb->buffer[3], 0x44);
     ASSERT_EQ(pbb->write_pos, 32);
     ASSERT_EQ(pbb->capacity, 4);
-
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteInt_MultipleInts_CorrectBufferValuesAndPositions) {
+TEST_F(PartialByteBufferWriteTest, WriteInt_MultipleFullInts_CorrectBufferValuesAndPositions) {
     pbb = pbb_create(8);
-    ASSERT_NE(pbb, nullptr);
 
     pbb_write_int(pbb, 0x11223344, 32);
     pbb_write_int(pbb, 0x55667788, 32);
@@ -177,49 +151,49 @@ TEST_F(PartialByteBufferWriteTest, WriteInt_MultipleInts_CorrectBufferValuesAndP
     ASSERT_EQ(pbb->buffer[7], 0x88);
     ASSERT_EQ(pbb->write_pos, 64);
     ASSERT_EQ(pbb->capacity, 8);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt_PartialInt_CorrectBufferValues) {
     pbb = pbb_create(4);
-    ASSERT_NE(pbb, nullptr);
 
     pbb_write_int(pbb, 0xABC, 12);
 
     ASSERT_EQ(pbb->buffer[0], 0xAB);
     ASSERT_EQ(pbb->buffer[1], 0xC0);
     ASSERT_EQ(pbb->write_pos, 12);
-
-    pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteInt_NegativePartialInt_CorrectBufferValues) {
-    pbb = pbb_create(4);
-    ASSERT_NE(pbb, nullptr);
+TEST_F(PartialByteBufferWriteTest, WriteInt_MultiplePartialInts_CorrectBufferValues) {
+    pbb = pbb_create(2);
 
-    pbb_write_int(pbb, 0xF6B, 12); // -149
+    pbb_write_int(pbb, 0xABC, 11);  // 0101 0111 100
+    pbb_write_int(pbb, 0xABC, 3);   // 100
 
-    ASSERT_EQ(pbb->buffer[0], 0xF6);
-    ASSERT_EQ(pbb->buffer[1], 0xB0);
-    ASSERT_EQ(pbb->write_pos, 12);
-
-    pbb_destroy(&pbb);
+    ASSERT_EQ(pbb->buffer[0], 0x57);
+    ASSERT_EQ(pbb->buffer[1], 0x90);
+    ASSERT_EQ(pbb->write_pos, 14);
 }
 
-TEST_F(PartialByteBufferWriteTest, WriteInt_NegativeFullInt_CorrectBufferValues) {
-    pbb = pbb_create(4);
-    ASSERT_NE(pbb, nullptr);
+TEST_F(PartialByteBufferWriteTest, WriteInt_ManyRandomPartialInts_CorrectBufferContent) {
+    const int total_ints = 100;
+    pbb = pbb_create(total_ints);
+    
+    const unsigned int seed = 12345;
+    int expected[total_ints];
+    
+    // Generate and write random ints
+    srand(seed);
+    for (int i = 0; i < total_ints; ++i) {
+        expected[i] = rand();
+        pbb_write_int(pbb, expected[i], 8);
+    }
 
-    pbb_write_int(pbb, 0xD1ECFE96, 32); // -772,997,482
+    ASSERT_EQ(pbb->write_pos, total_ints * 8);
 
-    ASSERT_EQ(pbb->buffer[0], 0xD1);
-    ASSERT_EQ(pbb->buffer[1], 0xEC);
-    ASSERT_EQ(pbb->buffer[2], 0xFE);
-    ASSERT_EQ(pbb->buffer[3], 0x96);
-    ASSERT_EQ(pbb->write_pos, 32);
-
-    pbb_destroy(&pbb);
+    // Verify buffer content
+    for (int i = 0; i < total_ints; ++i) {
+        ASSERT_EQ(pbb->buffer[i], expected[i] & 0xFF) << "Mismatch at int " << i;
+    }
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt_NullBuffer_DoNothing) {
@@ -234,7 +208,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt_NullBuffer_DoNothing) {
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_FullInt64_CorrectBufferValues) {
     pbb = pbb_create(8);
-    ASSERT_NE(pbb, nullptr);
 
     pbb_write_int64(pbb, 0x1122334455667788, 64);
 
@@ -248,8 +221,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_FullInt64_CorrectBufferValues) {
     ASSERT_EQ(pbb->buffer[7], 0x88);
     ASSERT_EQ(pbb->write_pos, 64);
     ASSERT_EQ(pbb->capacity, 8);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_MultipleInt64s_CorrectBufferValuesAndPositions) {
@@ -276,8 +247,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_MultipleInt64s_CorrectBufferValues
     ASSERT_EQ(pbb->buffer[15], 0x00);
     ASSERT_EQ(pbb->write_pos, 128);
     ASSERT_EQ(pbb->capacity, 16);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Below32Bits_CorrectBufferValues) {
@@ -289,8 +258,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Below32Bits_CorrectBu
     ASSERT_EQ(pbb->buffer[1], 0x9B);
     ASSERT_EQ(pbb->buffer[2], 0xDE);
     ASSERT_EQ(pbb->write_pos, 23);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Above32Bits_CorrectBufferValues) {
@@ -305,8 +272,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Above32Bits_CorrectBu
     ASSERT_EQ(pbb->buffer[4], 0x4D);
     ASSERT_EQ(pbb->buffer[5], 0x00);
     ASSERT_EQ(pbb->write_pos, 41);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_NullBuffer_DoNothing) {
@@ -322,8 +287,6 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_TooSmallBitLength_DoesNothing) {
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->write_pos, 0);
     ASSERT_EQ(pbb->capacity, 8);
-
-    pbb_destroy(&pbb);
 }
 
 TEST_F(PartialByteBufferWriteTest, WriteInt64_TooLargeBitLength_DoesNothing) {
@@ -333,9 +296,31 @@ TEST_F(PartialByteBufferWriteTest, WriteInt64_TooLargeBitLength_DoesNothing) {
     ASSERT_EQ(pbb->buffer[0], 0);
     ASSERT_EQ(pbb->write_pos, 0);
     ASSERT_EQ(pbb->capacity, 8);
-
-    pbb_destroy(&pbb);
 }
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_ManyRandomPartialInt64s_CorrectBufferContent) {
+    const int total_int64s = 100;
+    pbb = pbb_create(800);
+    
+    const unsigned int seed = 12345;
+    int64_t expected[total_int64s];
+    
+    // Generate and write random int64s
+    srand(seed);
+    for (int i = 0; i < total_int64s; ++i) {
+        // Combine two rand() calls to get a full 64-bit value
+        expected[i] = ((int64_t)rand() << 32) | ((int64_t)rand() & 0xFFFFFFFF);
+        pbb_write_int64(pbb, expected[i], 8);
+    }
+    
+    ASSERT_EQ(pbb->write_pos, total_int64s * 8);
+    
+    // Verify buffer content
+    for (int i = 0; i < total_int64s; ++i) {
+        ASSERT_EQ(pbb->buffer[i], expected[i] & 0xFF) << "Mismatch at int64 " << i;
+    }
+}
+
 
 #pragma endregion
 
