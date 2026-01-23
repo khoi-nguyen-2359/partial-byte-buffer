@@ -230,37 +230,159 @@ TEST_F(PartialByteBufferWriteTest, WriteInt_NullBuffer_DoNothing) {
 
 #pragma endregion
 
-#pragma region WRITE COMBINATION TESTS
+#pragma region WRITE INT 64 TESTS
 
-TEST_F(PartialByteBufferWriteTest, WriteByteThenInt_CorrectBufferValues) {
-    pbb = pbb_create(6);
+TEST_F(PartialByteBufferWriteTest, WriteInt64_FullInt64_CorrectBufferValues) {
+    pbb = pbb_create(8);
     ASSERT_NE(pbb, nullptr);
 
-    pbb_write_byte(pbb, 0xAA, 8);
-    pbb_write_int(pbb, 0x11223344, 32);
+    pbb_write_int64(pbb, 0x1122334455667788, 64);
 
-    ASSERT_EQ(pbb->buffer[0], 0xAA);
-    ASSERT_EQ(pbb->buffer[1], 0x11);
-    ASSERT_EQ(pbb->buffer[2], 0x22);
-    ASSERT_EQ(pbb->buffer[3], 0x33);
-    ASSERT_EQ(pbb->buffer[4], 0x44);
-    ASSERT_EQ(pbb->write_pos, 40);
-    ASSERT_EQ(pbb->capacity, 6);
+    ASSERT_EQ(pbb->buffer[0], 0x11);
+    ASSERT_EQ(pbb->buffer[1], 0x22);
+    ASSERT_EQ(pbb->buffer[2], 0x33);
+    ASSERT_EQ(pbb->buffer[3], 0x44);
+    ASSERT_EQ(pbb->buffer[4], 0x55);
+    ASSERT_EQ(pbb->buffer[5], 0x66);
+    ASSERT_EQ(pbb->buffer[6], 0x77);
+    ASSERT_EQ(pbb->buffer[7], 0x88);
+    ASSERT_EQ(pbb->write_pos, 64);
+    ASSERT_EQ(pbb->capacity, 8);
 
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferWriteTest, PutPartialByteThenPartialInt_CorrectBufferValues) {
-    pbb = pbb_create(4);
-    ASSERT_NE(pbb, nullptr);
+TEST_F(PartialByteBufferWriteTest, WriteInt64_MultipleInt64s_CorrectBufferValuesAndPositions) {
+    pbb = pbb_create(16);
+
+    pbb_write_int64(pbb, 0x1122334455667788, 64);
+    pbb_write_int64(pbb, 0x99AABBCCDDEEFF00, 64);
+
+    ASSERT_EQ(pbb->buffer[0], 0x11);
+    ASSERT_EQ(pbb->buffer[1], 0x22);
+    ASSERT_EQ(pbb->buffer[2], 0x33);
+    ASSERT_EQ(pbb->buffer[3], 0x44);
+    ASSERT_EQ(pbb->buffer[4], 0x55);
+    ASSERT_EQ(pbb->buffer[5], 0x66);
+    ASSERT_EQ(pbb->buffer[6], 0x77);
+    ASSERT_EQ(pbb->buffer[7], 0x88);
+    ASSERT_EQ(pbb->buffer[8], 0x99);
+    ASSERT_EQ(pbb->buffer[9], 0xAA);
+    ASSERT_EQ(pbb->buffer[10], 0xBB);
+    ASSERT_EQ(pbb->buffer[11], 0xCC);
+    ASSERT_EQ(pbb->buffer[12], 0xDD);
+    ASSERT_EQ(pbb->buffer[13], 0xEE);
+    ASSERT_EQ(pbb->buffer[14], 0xFF);
+    ASSERT_EQ(pbb->buffer[15], 0x00);
+    ASSERT_EQ(pbb->write_pos, 128);
+    ASSERT_EQ(pbb->capacity, 16);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Below32Bits_CorrectBufferValues) {
+    pbb = pbb_create(3);
+
+    pbb_write_int64(pbb, 0xFFFFFFFFFFABCDEF, 23);
+
+    ASSERT_EQ(pbb->buffer[0], 0x57);
+    ASSERT_EQ(pbb->buffer[1], 0x9B);
+    ASSERT_EQ(pbb->buffer[2], 0xDE);
+    ASSERT_EQ(pbb->write_pos, 23);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_PartialInt64_Above32Bits_CorrectBufferValues) {
+    pbb = pbb_create(6);
+
+    pbb_write_int64(pbb, 0x123456789A, 41);
+
+    ASSERT_EQ(pbb->buffer[0], 0x09);
+    ASSERT_EQ(pbb->buffer[1], 0x1A);
+    ASSERT_EQ(pbb->buffer[2], 0x2B);
+    ASSERT_EQ(pbb->buffer[3], 0x3C);
+    ASSERT_EQ(pbb->buffer[4], 0x4D);
+    ASSERT_EQ(pbb->buffer[5], 0x00);
+    ASSERT_EQ(pbb->write_pos, 41);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_NullBuffer_DoNothing) {
+    partial_byte_buffer* pbb_ptr = nullptr;
+    pbb_write_int64(pbb_ptr, 0x123456789ABCDEF0, 64);
+    ASSERT_EQ(pbb_ptr, nullptr);
+}
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_TooSmallBitLength_DoesNothing) {
+    pbb = pbb_create(8);
+
+    pbb_write_int64(pbb, 0x123456789ABCDEF0, 0);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->write_pos, 0);
+    ASSERT_EQ(pbb->capacity, 8);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferWriteTest, WriteInt64_TooLargeBitLength_DoesNothing) {
+    pbb = pbb_create(8);
+
+    pbb_write_int64(pbb, 0x123456789ABCDEF0, 65);
+    ASSERT_EQ(pbb->buffer[0], 0);
+    ASSERT_EQ(pbb->write_pos, 0);
+    ASSERT_EQ(pbb->capacity, 8);
+
+    pbb_destroy(&pbb);
+}
+
+#pragma endregion
+
+#pragma region WRITE COMBINATION TESTS
+
+TEST_F(PartialByteBufferWriteTest, WriteFullNumbers_CorrectBufferValues) {
+    pbb = pbb_create(13);
+
+    pbb_write_byte(pbb, 0x11, 8);
+    pbb_write_int(pbb, 0x22334455, 32);
+    pbb_write_int64(pbb, 0x66778899AABBCCDD, 64);
+
+    ASSERT_EQ(pbb->buffer[0], 0x11);
+    ASSERT_EQ(pbb->buffer[1], 0x22);
+    ASSERT_EQ(pbb->buffer[2], 0x33);
+    ASSERT_EQ(pbb->buffer[3], 0x44);
+    ASSERT_EQ(pbb->buffer[4], 0x55);
+    ASSERT_EQ(pbb->buffer[5], 0x66);
+    ASSERT_EQ(pbb->buffer[6], 0x77);
+    ASSERT_EQ(pbb->buffer[7], 0x88);
+    ASSERT_EQ(pbb->buffer[8], 0x99);
+    ASSERT_EQ(pbb->buffer[9], 0xAA);
+    ASSERT_EQ(pbb->buffer[10], 0xBB);
+    ASSERT_EQ(pbb->buffer[11], 0xCC);   
+    ASSERT_EQ(pbb->buffer[12], 0xDD);
+    ASSERT_EQ(pbb->write_pos, 104);
+    ASSERT_EQ(pbb->capacity, 13);
+
+    pbb_destroy(&pbb);
+}
+
+TEST_F(PartialByteBufferWriteTest, WritePartialNumbers_CorrectBufferValues) {
+    pbb = pbb_create(7);
 
     pbb_write_byte(pbb, 0b101, 3);      
     pbb_write_int(pbb, 0b101010111100, 12);
+    pbb_write_int64(pbb, 0b111100001111000011110000111100001010, 36);
 
     ASSERT_EQ(pbb->buffer[0], 0b10110101);
-    ASSERT_EQ(pbb->buffer[1], 0b01111000);
-    ASSERT_EQ(pbb->write_pos, 15);
-    ASSERT_EQ(pbb->capacity, 4);
+    ASSERT_EQ(pbb->buffer[1], 0b01111001);
+    ASSERT_EQ(pbb->buffer[2], 0b11100001);
+    ASSERT_EQ(pbb->buffer[3], 0b11100001);
+    ASSERT_EQ(pbb->buffer[4], 0b11100001);
+    ASSERT_EQ(pbb->buffer[5], 0b11100001);
+    ASSERT_EQ(pbb->buffer[6], 0b01000000);
+    ASSERT_EQ(pbb->write_pos, 51);
+    ASSERT_EQ(pbb->capacity, 7);
 
     pbb_destroy(&pbb);
 }
