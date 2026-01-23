@@ -15,9 +15,8 @@ class PartialByteBufferReadTest : public ::testing::Test {
 #pragma region READ BYTE TESTS
 
 TEST_F(PartialByteBufferReadTest, ReadByte_OneFullByte_CorrectValueAndCursorPositions) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0xAB, 8);
-    pbb_write_byte(pbb, 0xCD, 8);
+    uint8_t data[] = {0xAB, 0xCD};
+    pbb = pbb_from_array(data, 2);
 
     int8_t byte1 = pbb_read_byte(pbb, 8);
     ASSERT_EQ(byte1, (int8_t)0xAB);
@@ -25,9 +24,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_OneFullByte_CorrectValueAndCursorPosi
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_MultipleFullBytes_CorrectValueAndCursorPositions) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0xAB, 8);
-    pbb_write_byte(pbb, 0xCD, 8);
+    uint8_t data[] = {0xAB, 0xCD};
+    pbb = pbb_from_array(data, 2);
 
     int8_t byte1 = pbb_read_byte(pbb, 8);
     ASSERT_EQ(byte1, (int8_t)0xAB);
@@ -39,9 +37,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_MultipleFullBytes_CorrectValueAndCurs
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithSignExtension_CorrectValuesAndSign) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b10100000, 8);
-    pbb_write_byte(pbb, 0b00000000, 8);
+    uint8_t data[] = {0b10100000, 0b00000000};
+    pbb = pbb_from_array(data, 2);
 
     int8_t byte = pbb_read_byte(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(byte, (int8_t)0xFD); // Sign-extended to -1
@@ -49,9 +46,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithSignExtension_CorrectV
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithoutSignExtension_CorrectValuesAndSign) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b01100000, 8);
-    pbb_write_byte(pbb, 0b00000000, 8);
+    uint8_t data[] = {0b01100000, 0b00000000};
+    pbb = pbb_from_array(data, 2);
 
     int8_t byte = pbb_read_byte(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(byte, (int8_t)0x3); // Sign-extended to -1
@@ -59,9 +55,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialByteWithoutSignExtension_Corre
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_PartialBytes_CorrectValuesAndCursorPositions) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b10110101, 8);
-    pbb_write_byte(pbb, 0b01111000, 8);
+    uint8_t data[] = {0b10110101, 0b01111000};
+    pbb = pbb_from_array(data, 2);
     ASSERT_NE(pbb, nullptr);
 
     int8_t value1 = pbb_read_byte(pbb, 3); // Read first 3 bits: 101
@@ -78,8 +73,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_PartialBytes_CorrectValuesAndCursorPo
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_ExceedBufferLength_ReturnsZeroAndStopsAtEnd) {
-    pbb = pbb_create(1);
-    pbb_write_byte(pbb, 0b10101011, 8);
+    uint8_t data[] = {0b10101011};
+    pbb = pbb_from_array(data, 1);
 
     int8_t value1 = pbb_read_byte(pbb, 7);
     ASSERT_EQ(value1, (int8_t)0xD5);
@@ -91,8 +86,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_ExceedBufferLength_ReturnsZeroAndStop
 }
 
 TEST_F(PartialByteBufferReadTest, ReadByte_ZeroBitLength_ReturnsZero) {
-    pbb = pbb_create(1);
-    pbb_write_byte(pbb, 0xFF, 8);
+    uint8_t data[] = {0xFF};
+    pbb = pbb_from_array(data, 1);
     ASSERT_NE(pbb, nullptr);
 
     int8_t value1 = pbb_read_byte(pbb, 0); // Invalid: 0 bits
@@ -110,11 +105,8 @@ TEST_F(PartialByteBufferReadTest, ReadByte_NullReader_ReturnsZero) {
 #pragma region READ INT TESTS
 
 TEST_F(PartialByteBufferReadTest, ReadInt_OneFullInt_CorrectValueAndCursorPositions) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0x12, 8);
-    pbb_write_byte(pbb, 0x34, 8);
-    pbb_write_byte(pbb, 0x56, 8);
-    pbb_write_byte(pbb, 0x78, 8);
+    uint8_t data[] = {0x12, 0x34, 0x56, 0x78};
+    pbb = pbb_from_array(data, 4);
 
     int value = pbb_read_int(pbb, 32);
     ASSERT_EQ(value, (int) 0x12345678);
@@ -122,9 +114,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_OneFullInt_CorrectValueAndCursorPositi
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithSignExtension_CorrectValuesAndSign) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b11100000, 8);
-    pbb_write_byte(pbb, 0b00000000, 8);
+    uint8_t data[] = {0b11100000, 0b00000000};
+    pbb = pbb_from_array(data, 2);
 
     int value = pbb_read_int(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(value, -1); // Sign-extended to -1
@@ -132,9 +123,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithSignExtension_CorrectVa
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithoutSignExtension_CorrectValuesAndSign) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b01100000, 8);
-    pbb_write_byte(pbb, 0b00000000, 8);
+    uint8_t data[] = {0b01100000, 0b00000000};
+    pbb = pbb_from_array(data, 2);
 
     int value = pbb_read_int(pbb, 3); // Read first 3 bits: 111
     ASSERT_EQ(value, 3); // Sign-extended to -1
@@ -142,10 +132,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsWithoutSignExtension_Correc
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntAcrossMultiBytes_CorrectValuesAndCursors) {
-    pbb = pbb_create(3);
-    pbb_write_byte(pbb, 0b10110101, 8);
-    pbb_write_byte(pbb, 0b11001100, 8);
-    pbb_write_byte(pbb, 0b11110000, 8);
+    uint8_t data[] = {0b10110101, 0b11001100, 0b11110000};
+    pbb = pbb_from_array(data, 3);
 
     pbb_read_int(pbb, 3); // skip the first 3 bits
 
@@ -155,11 +143,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntAcrossMultiBytes_CorrectValu
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsAlignedEnd_CorrectValuesAndCursorPositions) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0b10110101, 8);
-    pbb_write_byte(pbb, 0b11001100, 8);
-    pbb_write_byte(pbb, 0b10101010, 8);
-    pbb_write_byte(pbb, 0b11110000, 8);
+    uint8_t data[] = {0b10110101, 0b11001100, 0b10101010, 0b11110000};
+    pbb = pbb_from_array(data, 4);
     ASSERT_NE(pbb, nullptr);
 
     int firstInt = pbb_read_int(pbb, 9); // Read first 9 bits
@@ -176,11 +161,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsAlignedEnd_CorrectValuesAnd
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsUnalignedEnd_CorrectValuesAndCursorPositions) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0b10110101, 8);
-    pbb_write_byte(pbb, 0b11001100, 8);
-    pbb_write_byte(pbb, 0b10101010, 8);
-    pbb_write_byte(pbb, 0b11110000, 8);
+    uint8_t data[] = {0b10110101, 0b11001100, 0b10101010, 0b11110000};
+    pbb = pbb_from_array(data, 4);
     ASSERT_NE(pbb, nullptr);
 
     int firstInt = pbb_read_int(pbb, 9); // Read first 9 bits
@@ -197,11 +179,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_PartialIntsUnalignedEnd_CorrectValuesA
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_NegativeValues_CorrectSignExtension) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
+    uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+    pbb = pbb_from_array(data, 4);
     ASSERT_NE(pbb, nullptr);
 
     int firstInt = pbb_read_int(pbb, 8); // Read 8 bits with high bit set
@@ -214,9 +193,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_NegativeValues_CorrectSignExtension) {
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_MixedPositiveNegative_CorrectSignExtension) {
-    pbb = pbb_create(2);
-    pbb_write_byte(pbb, 0b01111111, 8);
-    pbb_write_byte(pbb, 0b10000000, 8);
+    uint8_t data[] = {0b01111111, 0b10000000};
+    pbb = pbb_from_array(data, 2);
     ASSERT_NE(pbb, nullptr);
 
     int value1 = pbb_read_int(pbb, 8); // Positive: 0111 1111
@@ -227,11 +205,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_MixedPositiveNegative_CorrectSignExten
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ExceedBufferLength_ReturnsZeroAndStopsAtEnd) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0xAB, 8);
-    pbb_write_byte(pbb, 0xCD, 8);
-    pbb_write_byte(pbb, 0xEF, 8);
-    pbb_write_byte(pbb, 0x12, 8);
+    uint8_t data[] = {0xAB, 0xCD, 0xEF, 0x12};
+    pbb = pbb_from_array(data, 4);
     ASSERT_NE(pbb, nullptr);
 
     int value1 = pbb_read_int(pbb, 31); // Read 31 bits
@@ -244,11 +219,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_ExceedBufferLength_ReturnsZeroAndStops
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ZeroBitLength_ReturnsZero) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
+    uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+    pbb = pbb_from_array(data, 4);
 
     int value = pbb_read_int(pbb, 0); // Invalid: 0 bits
     ASSERT_EQ(value, 0);
@@ -256,11 +228,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_ZeroBitLength_ReturnsZero) {
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_ExcessiveBitLength_ReturnsZero) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
-    pbb_write_byte(pbb, 0xFF, 8);
+    uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+    pbb = pbb_from_array(data, 4);
     ASSERT_NE(pbb, nullptr);
 
     int value = pbb_read_int(pbb, 33); // Invalid: more than 32 bits
@@ -274,11 +243,8 @@ TEST_F(PartialByteBufferReadTest, ReadInt_NullReader_ReturnsZero) {
 }
 
 TEST_F(PartialByteBufferReadTest, ReadInt_CrossByteBoundaries_CorrectValues) {
-    pbb = pbb_create(4);
-    pbb_write_byte(pbb, 0b11010110, 8);
-    pbb_write_byte(pbb, 0b10101100, 8);
-    pbb_write_byte(pbb, 0b11110000, 8);
-    pbb_write_byte(pbb, 0b00001111, 8);
+    uint8_t data[] = {0b11010110, 0b10101100, 0b11110000, 0b00001111};
+    pbb = pbb_from_array(data, 4);
 
     int value1 = pbb_read_int(pbb, 3); // Read 3 bits: 110
     ASSERT_EQ(value1, 0xFFFFFFFE);
