@@ -110,3 +110,15 @@ TEST_F(PartialByteBufferReadIntTest, ReadInt_NullReader_ReturnsZero) {
     int value = pbb_read_int(nullptr, 16);
     ASSERT_EQ(value, 0);
 }
+
+TEST_F(PartialByteBufferReadIntTest, ReadInt_CrossByteBoundaries_CorrectValues) {
+    uint8_t data[] = {0b11010110, 0b10101100, 0b11110000, 0b00001111};
+    pbb = pbb_from_array(data, 4);
+
+    int64_t value1 = pbb_read_int64(pbb, 5); // Read 5 bits: 11010
+    ASSERT_EQ(value1, (int32_t) 0xFFFFFFFFFFFFFFFA);
+
+    int64_t value2 = pbb_read_int64(pbb, 21); // Read 21 bits crossing multiple bytes
+    ASSERT_EQ(value2, (int32_t) 0xFFFFFFFFFFFAB3C0);
+    ASSERT_EQ(pbb->read_pos, 26);
+}

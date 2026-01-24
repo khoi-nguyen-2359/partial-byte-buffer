@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-class PartialByteBufferReadIntTest : public ::testing::Test {
+class PartialByteBufferReadOverTest : public ::testing::Test {
     protected:
         partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
@@ -12,7 +12,7 @@ class PartialByteBufferReadIntTest : public ::testing::Test {
         }
 };
 
-TEST_F(PartialByteBufferReadIntTest, ReadByte_ExceedBufferLength_ReturnsZeroAndStopsAtEnd) {
+TEST_F(PartialByteBufferReadOverTest, ReadByte_ReturnsZero) {
     uint8_t data[] = {0b10101011};
     pbb = pbb_from_array(data, 1);
 
@@ -25,15 +25,24 @@ TEST_F(PartialByteBufferReadIntTest, ReadByte_ExceedBufferLength_ReturnsZeroAndS
     ASSERT_EQ(pbb->read_pos, 7); // Position should not advance
 }
 
-TEST_F(PartialByteBufferReadIntTest, ReadInt_ExceedsBufferLength_ReturnsZero) {
+TEST_F(PartialByteBufferReadOverTest, ReadInt_ReturnsZero) {
     uint8_t data[] = {0x12, 0x34};
     pbb = pbb_from_array(data, 2);
 
-    int value1 = pbb_read_int(pbb, 8);
-    ASSERT_EQ(value1, 0x12);
-    ASSERT_EQ(pbb->read_pos, 8);
-
     int value2 = pbb_read_int(pbb, 32); // Request 32 bits but only 8 available
     ASSERT_EQ(value2, 0);
-    ASSERT_EQ(pbb->read_pos, 8);
+    ASSERT_EQ(pbb->read_pos, 0);
+}
+
+TEST_F(PartialByteBufferReadOverTest, ReadInt64_ReturnsZeroAndStopsAtEnd) {
+    uint8_t data[] = {0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x9A};
+    pbb = pbb_from_array(data, 8);
+
+    int64_t value1 = pbb_read_int64(pbb, 32);
+    ASSERT_EQ(value1, 0xFFFFFFFFABCDEF12);
+    ASSERT_EQ(pbb->read_pos, 32);
+
+    int64_t value2 = pbb_read_int64(pbb, 64); // Try to read beyond buffer
+    ASSERT_EQ(value2, 0);
+    ASSERT_EQ(pbb->read_pos, 32); // Position should not advance
 }
