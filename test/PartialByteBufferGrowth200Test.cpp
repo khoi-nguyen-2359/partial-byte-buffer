@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-class PartialByteBufferCapacityDoubleTest : public ::testing::Test {
+class PartialByteBufferGrowth200Test : public ::testing::Test {
     protected:
         partial_byte_buffer *pbb = nullptr;
         void TearDown() override {
@@ -14,7 +14,7 @@ class PartialByteBufferCapacityDoubleTest : public ::testing::Test {
         }
 };
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferGrowth200Test, WriteByte_ExceedCapacityOnce_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0x11, 8);
@@ -29,7 +29,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExceedCapacityOnce_BufferG
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExceedCapacityTwice_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferGrowth200Test, WriteByte_ExceedCapacityTwice_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
     pbb_write_byte(pbb, 0x11, 8);
@@ -52,7 +52,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExceedCapacityTwice_Buffer
 }
 
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteInt_ExceedCapacityOnce_BufferGrowsCorrectly) {
+TEST_F(PartialByteBufferGrowth200Test, WriteInt_ExceedCapacityOnce_BufferGrowsCorrectly) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -68,7 +68,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteInt_ExceedCapacityOnce_BufferGr
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, PutPartialByteThenPartialInt_ExceedCapacity_CorrectBufferValuesAndCapacity) {
+TEST_F(PartialByteBufferGrowth200Test, PutPartialByteThenPartialInt_ExceedCapacity_CorrectBufferValuesAndCapacity) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -85,7 +85,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, PutPartialByteThenPartialInt_ExceedC
 }
 
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteByteThenInt_ExceedCapacityTwiceAtOnce_CorrectBufferCapacity) {
+TEST_F(PartialByteBufferGrowth200Test, WriteByteThenInt_ExceedCapacityTwiceAtOnce_CorrectBufferCapacity) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -96,7 +96,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteByteThenInt_ExceedCapacityTwice
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExactlyAtCapacity_NoGrowthYet) {
+TEST_F(PartialByteBufferGrowth200Test, WriteByte_ExactlyAtCapacity_NoGrowthYet) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -111,7 +111,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteByte_ExactlyAtCapacity_NoGrowth
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WritePartialByte_AtMaxCap_GrowsAndPreservesData) {
+TEST_F(PartialByteBufferGrowth200Test, WritePartialByte_AtMaxCap_GrowsAndPreservesData) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -128,7 +128,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WritePartialByte_AtMaxCap_GrowsAndPr
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteInt_PartialBytesWithinCap_CapMaintained) {
+TEST_F(PartialByteBufferGrowth200Test, WriteInt_PartialBytesWithinCap_CapMaintained) {
     pbb = pbb_create(4);
     ASSERT_NE(pbb, nullptr);
 
@@ -148,7 +148,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteInt_PartialBytesWithinCap_CapMa
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WriteFullBytes_WriteMultipleTimes_CorrectFinalCapacity) {
+TEST_F(PartialByteBufferGrowth200Test, WriteFullBytes_WriteMultipleTimes_CorrectFinalCapacity) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 
@@ -167,7 +167,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WriteFullBytes_WriteMultipleTimes_Co
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, WritePartialBytes_WriteMultipleTimes_CorrectFinalCapacity) {
+TEST_F(PartialByteBufferGrowth200Test, WritePartialBytes_WriteMultipleTimes_CorrectFinalCapacity) {
     int cap = 2;
     pbb = pbb_create(cap);
     ASSERT_NE(pbb, nullptr);
@@ -189,7 +189,7 @@ TEST_F(PartialByteBufferCapacityDoubleTest, WritePartialBytes_WriteMultipleTimes
     pbb_destroy(&pbb);
 }
 
-TEST_F(PartialByteBufferCapacityDoubleTest, AlternatingBytesAndInts_MultipleGrowths_DataIntegrity) {
+TEST_F(PartialByteBufferGrowth200Test, AlternatingBytesAndInts_MultipleGrowths_DataIntegrity) {
     pbb = pbb_create(2);
     ASSERT_NE(pbb, nullptr);
 

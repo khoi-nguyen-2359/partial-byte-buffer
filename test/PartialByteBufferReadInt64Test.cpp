@@ -115,7 +115,7 @@ TEST_F(PartialByteBufferReadInt64Test, ReadInt64_NullReader_ReturnsZero) {
 }
 
 TEST_F(PartialByteBufferReadInt64Test, ReadInt64_CrossByteBoundaries_CorrectValues) {
-    uint8_t data[] = {0b11010\110, 0b10101100, 0b11110000, 0b00001111,
+    uint8_t data[] = {0b11010110, 0b10101100, 0b11110000, 0b00001111,
                       0b11010110, 0b10101100, 0b11110000, 0b00001111};
     pbb = pbb_from_array(data, 8);
 
