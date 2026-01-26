@@ -9,7 +9,10 @@
  */
 typedef union qword {
     double double_val;
+    float float_val;
     uint64_t uint64_val;
+    uint32_t uint32_val;
+    int32_t int32_val;
 } qword;
 
 typedef struct partial_byte_buffer {
@@ -78,6 +81,26 @@ int8_t pbb_read_byte(partial_byte_buffer* pbbr, uint8_t bits);
  * Read a signed integer having a length of [bits] (1-32) from the buffer.
  */
 int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits);
+
+/**
+ * Write a 32-bit integer having a length of [bits] (1-32) to the buffer.
+ */
+void pbb_write_int32(partial_byte_buffer* pbb, int32_t value, uint8_t bits);
+
+/**
+ * Read a signed 32-bit integer having a length of [bits] (1-32) from the buffer.
+ */
+int32_t pbb_read_int32(partial_byte_buffer* pbbr, uint8_t bits);
+
+/**
+ * Write a single-precision float (32 bits) to the buffer.
+ */
+void pbb_write_float(partial_byte_buffer* pbb, float value);
+
+/**
+ * Read a single-precision float (32 bits) from the buffer.
+ */
+float pbb_read_float(partial_byte_buffer* pbbr);
 
 /**
  * Write a 64-bit integer having a length of [bits] (1-64) to the buffer.

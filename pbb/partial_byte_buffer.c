@@ -9,8 +9,10 @@
 #define CLAMP(val, min, max) ( (val) < (min) ? (min) : ( (val) > (max) ? (max) : (val) ) )
 
 static const uint8_t BITSIZEOF_INT = sizeof(int) << 3;
+static const uint8_t BITSIZEOF_INT32 = sizeof(int32_t) << 3;
 static const uint8_t BITSIZEOF_LONG = sizeof(long) << 3;
 static const uint8_t BITSIZEOF_INT64 = sizeof(int64_t) << 3;
+static const uint8_t BITSIZEOF_FLOAT = sizeof(float) << 3;
 
 static const int CAPACITY_DOUBLE = 0;
 static const int CAPACITY_HALF = 1;
@@ -168,6 +170,51 @@ int pbb_read_int(partial_byte_buffer* pbbr, uint8_t bits) {
     }
     
     return (int) result;
+}
+
+void pbb_write_int32(partial_byte_buffer* pbb, int32_t value, uint8_t bits) {
+    if (pbb == NULL || bits <= 0 || bits > BITSIZEOF_INT32) return;
+
+    ensure_capacity(pbb, bits);
+    
+    uint8_t remaining_bits = bits;
+    while (remaining_bits > 0) {
+        write_byte(pbb, value, &remaining_bits);
+    }
+}
+
+int32_t pbb_read_int32(partial_byte_buffer* pbbr, uint8_t bits) {
+    if (pbbr == NULL || bits <= 0 || bits > BITSIZEOF_INT32) return 0;
+    if (required_length(pbbr, bits) > pbb_get_length(pbbr)) return 0;
+
+    uint64_t result = 0;
+    uint8_t remaining_bit_len = bits;
+    while (remaining_bit_len > 0) {
+        read_byte(pbbr, &result, &remaining_bit_len);
+    }
+
+    // Sign extension for negative values
+    if (bits < BITSIZEOF_INT32) {
+        extend_sign(&result, bits);
+    }
+    
+    return (int32_t) result;
+}
+
+void pbb_write_float(partial_byte_buffer* pbb, float value) {
+    if (pbb == NULL) return;
+    
+    qword q;
+    q.float_val = value;
+    pbb_write_int32(pbb, q.int32_val, BITSIZEOF_FLOAT);
+}
+
+float pbb_read_float(partial_byte_buffer* pbbr) {
+    if (pbbr == NULL) return 0.0f;
+    
+    qword q;
+    q.int32_val = pbb_read_int32(pbbr, BITSIZEOF_FLOAT);
+    return q.float_val;
 }
 
 void pbb_write_int64(partial_byte_buffer* pbb, int64_t value, uint8_t bits) {
